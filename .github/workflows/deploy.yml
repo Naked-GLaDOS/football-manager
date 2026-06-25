@@ -1,0 +1,49 @@
+name: Production Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - name: Update package.json version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Bumping version to $VERSION"
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          git config --global user.email "bot@naked-glados.com"
+          git config --global user.name "GLaDOS Version Bot"
+          git add package.json
+          git commit -m "chore: bump version to $VERSION [skip ci]" || echo "No changes to commit"
+          git push origin main
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            d4knezsl1me/football-manager:${{ github.ref_name }}
+            d4knezsl1me/football-manager:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
