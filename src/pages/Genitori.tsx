@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
-import { c, card, btn, btnGhost, overlay, modal, input as inputStyle, label as lblStyle } from '../lib/ui';
+import { IconShare, IconEdit } from '../components/Icons';
 
 // Share a parent's name + phone via the native share sheet (PWA/mobile), with a
 // WhatsApp / clipboard fallback on desktop browsers without the Web Share API.
@@ -12,10 +12,7 @@ async function shareContact(name: string | null, phone: string | null, title: st
     try { await navigator.share({ title, text }); return; } catch { /* cancelled */ }
   }
   const digits = (phone || '').replace(/[^\d+]/g, '').replace(/^\+/, '');
-  if (digits) {
-    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(name || '')}`, '_blank');
-    return;
-  }
+  if (digits) { window.open(`https://wa.me/${digits}?text=${encodeURIComponent(name || '')}`, '_blank'); return; }
   try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
 }
 
@@ -37,24 +34,29 @@ export default function Genitori() {
 
   const name = (p: Person) => [p.lastName, p.firstName].filter(Boolean).join(' ') || t('unknown');
 
-  if (!teamId) return <p style={{ color: c.muted, padding: '2rem 0' }}>{t('noTeam')}</p>;
+  if (!teamId) return <p className="empty">{t('noTeam')}</p>;
 
   return (
-    <div style={{ padding: '1rem 0' }}>
-      <h2 style={{ marginTop: 0 }}>{t('parents')}</h2>
+    <div>
+      <div className="section-head"><h2 className="title">{t('parents')}</h2></div>
+
       {loading ? (
-        <p style={{ color: c.muted }}>{t('loading')}</p>
+        <p className="empty">{t('loading')}</p>
       ) : rows.length === 0 ? (
-        <p style={{ color: c.muted }}>{t('empty')}</p>
+        <p className="empty">{t('empty')}</p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="stack">
           {rows.map((p) => (
-            <div key={p.id} style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <strong>{name(p)}</strong>
-                {editable && <button style={btnGhost} onClick={() => setEditing(p)}>{t('edit')}</button>}
+            <div key={p.id} className="card">
+              <div className="row" style={{ marginBottom: '0.7rem' }}>
+                <strong className="row-main">{name(p)}</strong>
+                {editable && (
+                  <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setEditing(p)} title={t('edit')}>
+                    <IconEdit />
+                  </button>
+                )}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(12rem,1fr))', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(11rem,1fr))', gap: '0.6rem' }}>
                 <ParentCard label={t('father')} name={p.fatherName ?? null} phone={p.fatherPhone ?? null}
                   shareLabel={t('shareContact')} unknown={t('unknown')} share={t('share')} />
                 <ParentCard label={t('mother')} name={p.motherName ?? null} phone={p.motherPhone ?? null}
@@ -66,35 +68,33 @@ export default function Genitori() {
       )}
 
       {editing && (
-        <ParentsEditor
-          player={editing}
-          onClose={() => setEditing(null)}
+        <ParentsEditor player={editing} onClose={() => setEditing(null)}
           onSave={async (data) => {
             if (!teamId || !seasonId) return;
             await api.updatePerson('players', teamId, seasonId, editing.id, data);
-            setEditing(null);
-            await load();
-          }}
-        />
+            setEditing(null); await load();
+          }} />
       )}
     </div>
   );
 }
 
 function ParentCard({ label, name, phone, share, shareLabel, unknown }: {
-  label: string; name: string | null; phone: string | null;
-  share: string; shareLabel: string; unknown: string;
+  label: string; name: string | null; phone: string | null; share: string; shareLabel: string; unknown: string;
 }) {
   const has = name || phone;
   return (
-    <div style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: '0.5rem', padding: '0.6rem' }}>
-      <div style={{ color: c.muted, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      <div style={{ fontWeight: 600 }}>{name || unknown}</div>
-      <div style={{ color: c.muted, fontSize: '0.85rem' }}>{phone || unknown}</div>
+    <div style={{
+      background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
+      borderRadius: '13px', padding: '0.7rem 0.8rem',
+    }}>
+      <div className="muted" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+      <div style={{ fontWeight: 600, marginTop: '0.15rem' }}>{name || unknown}</div>
+      <div className="muted" style={{ fontSize: '0.85rem' }}>{phone || unknown}</div>
       {has && (
-        <button style={{ ...btnGhost, marginTop: '0.4rem', padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
+        <button className="btn btn-ghost btn-sm" style={{ marginTop: '0.55rem', width: '100%' }}
           onClick={() => shareContact(name, phone, shareLabel)}>
-          📤 {share}
+          <IconShare /> {share}
         </button>
       )}
     </div>
@@ -113,8 +113,7 @@ function ParentsEditor({ player, onSave, onClose }: {
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
 
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+    e.preventDefault(); setSaving(true);
     await onSave({
       fatherName: f.fatherName.trim() || null, fatherPhone: f.fatherPhone.trim() || null,
       motherName: f.motherName.trim() || null, motherPhone: f.motherPhone.trim() || null,
@@ -122,28 +121,30 @@ function ParentsEditor({ player, onSave, onClose }: {
   };
 
   const field = (label: string, k: keyof typeof f, type = 'text') => (
-    <div>
-      <label style={lblStyle}>{label}</label>
-      <input style={inputStyle} type={type} value={f[k]} placeholder={t('unknown')}
-        onChange={(e) => set(k, e.target.value)} />
+    <div className="field">
+      <label>{label}</label>
+      <input className="input" type={type} value={f[k]} placeholder={t('unknown')} onChange={(e) => set(k, e.target.value)} />
     </div>
   );
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <form style={modal} onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <h3 style={{ marginTop: 0 }}>{t('parents')}</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          <div style={{ gridColumn: '1 / -1', color: c.muted, fontSize: '0.8rem' }}>{t('father')}</div>
+    <div className="overlay" onClick={onClose}>
+      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="sheet-grip" />
+        <h3 className="title" style={{ marginBottom: '1rem' }}>{t('parents')}</h3>
+        <div className="muted" style={{ fontSize: '0.78rem', marginBottom: '0.4rem' }}>{t('father')}</div>
+        <div className="grid-fields" style={{ marginBottom: '1rem' }}>
           {field(t('parentName'), 'fatherName')}
           {field(t('parentPhone'), 'fatherPhone', 'tel')}
-          <div style={{ gridColumn: '1 / -1', color: c.muted, fontSize: '0.8rem' }}>{t('mother')}</div>
+        </div>
+        <div className="muted" style={{ fontSize: '0.78rem', marginBottom: '0.4rem' }}>{t('mother')}</div>
+        <div className="grid-fields">
           {field(t('parentName'), 'motherName')}
           {field(t('parentPhone'), 'motherPhone', 'tel')}
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-          <button type="button" style={btnGhost} onClick={onClose}>{t('cancel')}</button>
-          <button type="submit" style={btn} disabled={saving}>{saving ? t('loading') : t('save')}</button>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
+          <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? t('loading') : t('save')}</button>
         </div>
       </form>
     </div>

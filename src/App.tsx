@@ -5,25 +5,20 @@ import Layout, { type View } from './components/Layout';
 import Roster from './pages/Roster';
 import Genitori from './pages/Genitori';
 import Cms from './pages/Cms';
-import { c } from './lib/ui';
 
 function Shell() {
   const s = useSession();
   const [view, setView] = useState<View>('players');
 
-  // Admins with no team assignments land on the CMS.
+  // Admins live in the CMS; regular users in the roster views. Keep the active
+  // view consistent with the account type.
   useEffect(() => {
-    if (s.authed && s.isAdmin && s.me && s.me.teams.length === 0) setView('cms');
-  }, [s.authed, s.isAdmin, s.me]);
-
-  // Non-admins can't stay on the CMS view.
-  useEffect(() => {
+    if (!s.authed) return;
+    if (s.isAdmin && view !== 'cms') setView('cms');
     if (!s.isAdmin && view === 'cms') setView('players');
-  }, [s.isAdmin, view]);
+  }, [s.authed, s.isAdmin, view]);
 
-  if (!s.ready) {
-    return <div style={{ minHeight: '100dvh', background: c.bg, color: c.muted, display: 'grid', placeItems: 'center' }}>…</div>;
-  }
+  if (!s.ready) return <div className="spinner-page">…</div>;
   if (!s.authed) return <Login />;
 
   return (

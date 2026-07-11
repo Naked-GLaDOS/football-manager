@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, type AdminTeam, type AdminUser } from '../lib/api';
 import { useSession } from '../lib/session';
-import { c, card, btn, btnGhost, btnDanger, input as inputStyle, label as lblStyle } from '../lib/ui';
+import { IconPlus, IconEdit } from '../components/Icons';
 
 export default function Cms() {
   const { t } = useSession();
   const [tab, setTab] = useState<'teams' | 'users'>('teams');
   return (
-    <div style={{ padding: '1rem 0' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <button style={tabBtn(tab === 'teams')} onClick={() => setTab('teams')}>{t('manageTeams')}</button>
-        <button style={tabBtn(tab === 'users')} onClick={() => setTab('users')}>{t('manageUsers')}</button>
+    <div>
+      <div className="section-head">
+        <h2 className="title">{t('cms')}</h2>
+        <div className="segmented">
+          <button className={tab === 'teams' ? 'active' : ''} onClick={() => setTab('teams')}>{t('manageTeams')}</button>
+          <button className={tab === 'users' ? 'active' : ''} onClick={() => setTab('users')}>{t('manageUsers')}</button>
+        </div>
       </div>
       {tab === 'teams' ? <Teams /> : <Users />}
     </div>
@@ -28,9 +31,7 @@ function Teams() {
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    await api.createTeam(name.trim());
-    setName('');
-    await load();
+    await api.createTeam(name.trim()); setName(''); await load();
   };
   const rename = async (id: string, current: string) => {
     const next = prompt(t('teamName'), current);
@@ -42,24 +43,24 @@ function Teams() {
 
   return (
     <div>
-      <form onSubmit={create} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <input style={inputStyle} placeholder={t('newTeam')} value={name} onChange={(e) => setName(e.target.value)} />
-        <button style={btn} type="submit">{t('create')}</button>
+      <form onSubmit={create} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.1rem' }}>
+        <input className="input" placeholder={t('newTeam')} value={name} onChange={(e) => setName(e.target.value)} />
+        <button className="btn btn-primary" type="submit"><IconPlus /> {t('create')}</button>
       </form>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {teams.map((tm) => (
-          <div key={tm.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600 }}>{tm.name}</div>
-              <div style={{ color: c.muted, fontSize: '0.8rem' }}>
-                {tm.memberships.map((m) => m.user.email).join(', ') || '—'}
+      {teams.length === 0 ? <p className="empty">{t('empty')}</p> : (
+        <div className="stack">
+          {teams.map((tm) => (
+            <div key={tm.id} className="card row">
+              <div className="row-main">
+                <div className="row-title">{tm.name}</div>
+                <div className="row-sub">{tm.memberships.map((m) => m.user.email).join(', ') || '—'}</div>
               </div>
+              <button className="btn btn-ghost btn-sm btn-icon" onClick={() => rename(tm.id, tm.name)}><IconEdit /></button>
+              <button className="btn btn-danger btn-sm" onClick={() => remove(tm.id)}>{t('delete')}</button>
             </div>
-            <button style={btnGhost} onClick={() => rename(tm.id, tm.name)}>{t('edit')}</button>
-            <button style={btnDanger} onClick={() => remove(tm.id)}>{t('delete')}</button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -82,18 +83,20 @@ function Users() {
 
   return (
     <div>
-      <button style={{ ...btn, marginBottom: '1rem' }} onClick={() => setEditing('new')}>+ {t('newUser')}</button>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <button className="btn btn-primary" style={{ marginBottom: '1.1rem' }} onClick={() => setEditing('new')}>
+        <IconPlus /> {t('newUser')}
+      </button>
+      <div className="stack">
         {users.map((u) => (
-          <div key={u.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600 }}>{u.email} {u.role === 'ADMIN' && <span style={badge}>ADMIN</span>}</div>
-              <div style={{ color: c.muted, fontSize: '0.8rem' }}>
+          <div key={u.id} className="card row">
+            <div className="row-main">
+              <div className="row-title">{u.email} {u.role === 'ADMIN' && <span className="badge">ADMIN</span>}</div>
+              <div className="row-sub">
                 {teams.filter((tm) => u.teamIds.includes(tm.id)).map((tm) => tm.name).join(', ') || '—'}
               </div>
             </div>
-            <button style={btnGhost} onClick={() => setEditing(u)}>{t('edit')}</button>
-            {u.role !== 'ADMIN' && <button style={btnDanger} onClick={() => remove(u)}>{t('delete')}</button>}
+            <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setEditing(u)}><IconEdit /></button>
+            {u.role !== 'ADMIN' && <button className="btn btn-danger btn-sm" onClick={() => remove(u)}>{t('delete')}</button>}
           </div>
         ))}
       </div>
@@ -120,79 +123,49 @@ function UserEditor({ user, teams, onClose, onSaved }: {
     setTeamIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true); setError('');
+    e.preventDefault(); setSaving(true); setError('');
     try {
-      if (user) {
-        await api.updateUser(user.id, {
-          email: email.trim(),
-          password: password.trim() || undefined,
-          teamIds,
-        });
-      } else {
-        await api.createUser(email.trim(), password.trim(), teamIds);
-      }
+      if (user) await api.updateUser(user.id, { email: email.trim(), password: password.trim() || undefined, teamIds });
+      else await api.createUser(email.trim(), password.trim(), teamIds);
       await onSaved();
-    } catch (err: any) {
-      setError(err.message || 'Error'); setSaving(false);
-    }
-  };
-
-  const overlayStyle: React.CSSProperties = {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+    } catch (err: any) { setError(err.message || 'Error'); setSaving(false); }
   };
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <form style={{ background: c.card, borderRadius: '1rem', padding: '1.5rem', maxWidth: '26rem', width: '100%' }}
-        onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <h3 style={{ marginTop: 0 }}>{user ? t('edit') : t('newUser')}</h3>
+    <div className="overlay" onClick={onClose}>
+      <form className="modal" style={{ maxWidth: '26rem' }} onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="sheet-grip" />
+        <h3 className="title" style={{ marginBottom: '1rem' }}>{user ? t('edit') : t('newUser')}</h3>
 
-        <label style={lblStyle}>{t('email')}</label>
-        <input style={inputStyle} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-
-        <label style={{ ...lblStyle, marginTop: '0.75rem' }}>
-          {user ? t('changePassword') : t('initialPassword')}
-        </label>
-        <input style={inputStyle} type="text" autoComplete="off" value={password}
-          required={!user} minLength={8} onChange={(e) => setPassword(e.target.value)} />
-
-        <label style={{ ...lblStyle, marginTop: '0.75rem' }}>{t('assignedTeams')}</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {teams.map((tm) => (
-            <button type="button" key={tm.id} onClick={() => toggle(tm.id)}
-              style={teamIds.includes(tm.id) ? chipOn : chipOff}>
-              {tm.name}
-            </button>
-          ))}
+        <div className="stack">
+          <div className="field">
+            <label>{t('email')}</label>
+            <input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>{user ? t('changePassword') : t('initialPassword')}</label>
+            <input className="input" type="text" autoComplete="off" value={password}
+              required={!user} minLength={8} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>{t('assignedTeams')}</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+              {teams.length === 0 && <span className="muted" style={{ fontSize: '0.85rem' }}>—</span>}
+              {teams.map((tm) => (
+                <button type="button" key={tm.id} className={`chip${teamIds.includes(tm.id) ? ' on' : ''}`}
+                  onClick={() => toggle(tm.id)}>{tm.name}</button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {error && <p style={{ color: c.danger, fontSize: '0.85rem' }}>{error}</p>}
+        {error && <p className="error">{error}</p>}
 
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-          <button type="button" style={btnGhost} onClick={onClose}>{t('cancel')}</button>
-          <button type="submit" style={btn} disabled={saving}>{saving ? t('loading') : t('save')}</button>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>{t('cancel')}</button>
+          <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? t('loading') : t('save')}</button>
         </div>
       </form>
     </div>
   );
 }
-
-const tabBtn = (active: boolean): React.CSSProperties => ({
-  background: active ? c.green : 'transparent', color: active ? '#fff' : c.muted,
-  border: `1px solid ${active ? c.green : c.border}`, borderRadius: '0.5rem',
-  padding: '0.45rem 0.9rem', fontSize: '0.9rem', cursor: 'pointer',
-});
-const badge: React.CSSProperties = {
-  background: c.greenDim, color: '#fff', fontSize: '0.65rem', padding: '0.1rem 0.4rem',
-  borderRadius: '0.4rem', marginLeft: '0.4rem', verticalAlign: 'middle',
-};
-const chipOn: React.CSSProperties = {
-  background: c.green, color: '#fff', border: 'none', borderRadius: '1rem',
-  padding: '0.3rem 0.7rem', fontSize: '0.85rem', cursor: 'pointer',
-};
-const chipOff: React.CSSProperties = {
-  background: 'transparent', color: c.muted, border: `1px solid ${c.border}`, borderRadius: '1rem',
-  padding: '0.3rem 0.7rem', fontSize: '0.85rem', cursor: 'pointer',
-};

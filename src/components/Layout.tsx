@@ -1,14 +1,14 @@
 import { useSession } from '../lib/session';
 import type { TKey } from '../lib/i18n';
-import { c, container } from '../lib/ui';
+import { IconPlayers, IconStaff, IconParents, IconAdmin, IconGlobe, IconLogout } from './Icons';
 
 export type View = 'players' | 'staff' | 'genitori' | 'cms';
 
-const NAV: { view: View; key: TKey; adminOnly?: boolean }[] = [
-  { view: 'players', key: 'players' },
-  { view: 'staff', key: 'staff' },
-  { view: 'genitori', key: 'parents' },
-  { view: 'cms', key: 'cms', adminOnly: true },
+const NAV: { view: View; key: TKey; Icon: React.FC<{ size?: number }>; adminOnly?: boolean }[] = [
+  { view: 'players', key: 'players', Icon: IconPlayers },
+  { view: 'staff', key: 'staff', Icon: IconStaff },
+  { view: 'genitori', key: 'parents', Icon: IconParents },
+  { view: 'cms', key: 'cms', Icon: IconAdmin, adminOnly: true },
 ];
 
 export default function Layout({
@@ -16,71 +16,66 @@ export default function Layout({
 }: { view: View; setView: (v: View) => void; children: React.ReactNode }) {
   const s = useSession();
   const { t } = s;
+  // Admins only get the CMS (teams + users). Regular users get the roster views.
+  const items = NAV.filter((n) => (s.isAdmin ? n.view === 'cms' : n.view !== 'cms'));
+  const showContext = view !== 'cms';
 
   return (
-    <div style={{ minHeight: '100dvh', background: c.bg, color: c.text }}>
-      <header style={bar}>
-        <div style={{ ...container, display: 'flex', flexWrap: 'wrap', gap: '0.6rem', alignItems: 'center' }}>
-          <strong style={{ color: c.green, fontSize: '1.05rem', marginRight: '0.5rem' }}>{t('appName')}</strong>
+    <div className="app">
+      <header className="appbar">
+        <div className="appbar-row">
+          <span className="brand">FM</span>
 
-          {/* Team switcher (hidden on CMS view / when no teams) */}
-          {view !== 'cms' && s.me && s.me.teams.length > 0 && (
-            <select value={s.teamId ?? ''} onChange={(e) => s.setTeam(e.target.value)} style={select} aria-label={t('team')}>
+          {showContext && s.me && s.me.teams.length > 0 && (
+            <select className="select compact" value={s.teamId ?? ''} aria-label={t('team')}
+              onChange={(e) => s.setTeam(e.target.value)}>
               {s.me.teams.map((tm) => <option key={tm.id} value={tm.id}>{tm.name}</option>)}
             </select>
           )}
 
-          {/* Season switcher */}
-          {view !== 'cms' && (
-            <select value={s.seasonId ?? ''} onChange={(e) => s.setSeason(e.target.value)} style={select} aria-label={t('season')}>
+          {showContext && (
+            <select className="select compact" value={s.seasonId ?? ''} aria-label={t('season')}
+              onChange={(e) => s.setSeason(e.target.value)}>
               {s.seasons.map((se) => (
                 <option key={se.id} value={se.id}>{se.name}{se.editable ? '' : ' 🔒'}</option>
               ))}
             </select>
           )}
 
-          <div style={{ flex: 1 }} />
+          <span className="spacer" />
 
-          <button onClick={() => s.setLang(s.lang === 'it' ? 'en' : 'it')} style={iconBtn} title={t('language')}>
-            {s.lang === 'it' ? '🇮🇹' : '🇬🇧'}
+          <button className="btn btn-ghost btn-icon" title={t('language')}
+            onClick={() => s.setLang(s.lang === 'it' ? 'en' : 'it')}>
+            <IconGlobe /><span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{s.lang.toUpperCase()}</span>
           </button>
-          <button onClick={s.logout} style={iconBtn}>{t('signOut')}</button>
+          <button className="btn btn-ghost btn-icon" title={t('signOut')} onClick={s.logout}>
+            <IconLogout />
+          </button>
         </div>
 
-        <nav style={{ ...container, display: 'flex', gap: '0.4rem', paddingTop: 0, overflowX: 'auto' }}>
-          {NAV.filter((n) => !n.adminOnly || s.isAdmin).map((n) => (
-            <button key={n.view} onClick={() => setView(n.view)} style={tab(view === n.view)}>
+        <nav className="nav-desktop">
+          {items.map((n) => (
+            <button key={n.view} className={`nav-tab${view === n.view ? ' active' : ''}`} onClick={() => setView(n.view)}>
               {t(n.key)}
             </button>
           ))}
         </nav>
       </header>
 
-      {view !== 'cms' && !s.editable && (
-        <div style={lockedBanner}>🔒 {t('seasonLocked')}</div>
+      {showContext && !s.editable && (
+        <div className="banner-locked">🔒 {t('seasonLocked')}</div>
       )}
 
-      <main style={container}>{children}</main>
+      <main className="content">{children}</main>
+
+      <nav className="tabbar">
+        {items.map((n) => (
+          <button key={n.view} className={view === n.view ? 'active' : ''} onClick={() => setView(n.view)}>
+            <n.Icon size={22} />
+            {t(n.key)}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
-
-const bar: React.CSSProperties = {
-  background: c.card, borderBottom: `1px solid ${c.border}`, position: 'sticky', top: 0, zIndex: 20,
-};
-const select: React.CSSProperties = {
-  background: c.bg, color: c.text, border: `1px solid ${c.border}`, borderRadius: '0.5rem',
-  padding: '0.35rem 0.5rem', fontSize: '0.9rem',
-};
-const iconBtn: React.CSSProperties = {
-  background: 'transparent', color: c.muted, border: `1px solid ${c.border}`, borderRadius: '0.5rem',
-  padding: '0.35rem 0.6rem', fontSize: '0.85rem', cursor: 'pointer',
-};
-const tab = (active: boolean): React.CSSProperties => ({
-  background: 'transparent', border: 'none', borderBottom: `2px solid ${active ? c.green : 'transparent'}`,
-  color: active ? c.text : c.muted, fontWeight: active ? 600 : 400,
-  padding: '0.6rem 0.4rem', fontSize: '0.95rem', cursor: 'pointer', whiteSpace: 'nowrap',
-});
-const lockedBanner: React.CSSProperties = {
-  background: '#78350f', color: '#fed7aa', textAlign: 'center', padding: '0.4rem', fontSize: '0.85rem',
-};
