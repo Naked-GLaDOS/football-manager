@@ -28,7 +28,13 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/api': 'http://localhost:3000',
+      // Strip the /api prefix to mirror the production ingress (backend routes
+      // are mounted at the root, e.g. /auth, /me, /teams).
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ''),
+      },
     },
   },
 });
