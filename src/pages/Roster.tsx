@@ -1,18 +1,26 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, type Kind, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
 import PersonForm from '../components/PersonForm';
 import PersonDetail from '../components/PersonDetail';
-import { IconPlus, IconEdit } from '../components/Icons';
+import BulkCopyModal from '../components/BulkCopyModal';
+import { exportRosterPdf } from '../lib/exportPdf';
+import { IconPlus, IconEdit, IconCopy, IconDownload } from '../components/Icons';
 
 export default function Roster({ kind }: { kind: Kind }) {
   const s = useSession();
-  const { t, teamId, seasonId, editable } = s;
+  const { t, teamId, seasonId, editable, me } = s;
+  const nav = useNav();
   const [rows, setRows] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Person | null | 'new'>(null);
   const [viewing, setViewing] = useState<Person | null>(null);
+  const [copying, setCopying] = useState(false);
+
+  const teamName = me?.teams.find((tm) => tm.id === teamId)?.name ?? t('team');
+  const seasonName = s.season?.name ?? '';
 
   const load = useCallback(async () => {
     if (!teamId || !seasonId) return;
@@ -47,11 +55,24 @@ export default function Roster({ kind }: { kind: Kind }) {
     <div>
       <div className="section-head">
         <h2 className="title">{kind === 'players' ? t('players') : t('staff')}</h2>
-        {editable && (
-          <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
-            <IconPlus /> {t('add')}
-          </button>
-        )}
+        <div className="head-actions">
+          {kind === 'players' && rows.length > 0 && (
+            <>
+              <button className="btn btn-ghost btn-sm" onClick={() => setCopying(true)} title={t('copyData')}>
+                <IconCopy /> {t('copyData')}
+              </button>
+              <button className="btn btn-ghost btn-sm" title={t('exportPdf')}
+                onClick={() => exportRosterPdf(rows, kind, teamName, seasonName, t)}>
+                <IconDownload /> {t('exportPdf')}
+              </button>
+            </>
+          )}
+          {editable && (
+            <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
+              <IconPlus /> {t('add')}
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -61,7 +82,9 @@ export default function Roster({ kind }: { kind: Kind }) {
       ) : (
         <div className="stack">
           {rows.map((p) => (
-            <div key={p.id} className="card interactive row" onClick={() => setViewing(p)} style={{ cursor: 'pointer' }}>
+            <div key={p.id} className="card interactive row"
+              onClick={() => (kind === 'players' ? nav.open({ type: 'player', id: p.id }) : setViewing(p))}
+              style={{ cursor: 'pointer' }}>
               <div className="avatar">{initials(p)}</div>
               <div className="row-main">
                 <div className="row-title">{name(p)}</div>
@@ -94,6 +117,12 @@ export default function Roster({ kind }: { kind: Kind }) {
           onEdit={() => { const p = viewing; setViewing(null); setEditing(p); }}
           onClose={() => setViewing(null)}
         />
+      )}
+
+      {copying && (
+        <BulkCopyModal kind={kind} people={rows}
+          title={[teamName, seasonName].filter(Boolean).join(' · ')}
+          onClose={() => setCopying(false)} />
       )}
 
       {editing !== null && (

@@ -354,3 +354,89 @@ button { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
+
+/* ── Full-page detail header + action rows ───────────────────────────────── */
+.page-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.1rem; }
+.head-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Tabs: a full-width segmented control. */
+.segmented.tabs { display: flex; width: 100%; }
+.segmented.tabs button { flex: 1; }
+.segmented.mini { padding: 0.15rem; border-radius: 10px; }
+.segmented.mini button { padding: 0.3rem 0.55rem; font-size: 0.78rem; border-radius: 7px; }
+
+/* ── Statistics cards ────────────────────────────────────────────────────── */
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem; margin-bottom: 1.4rem;
+}
+.stat-card {
+  background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  padding: 0.85rem 0.9rem;
+}
+.stat-value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.15rem; }
+
+/* ── Pills / captain badges / card chips ─────────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 20px;
+  font-size: 0.66rem; font-weight: 800; padding: 0.1rem 0.35rem; border-radius: 6px;
+  background: var(--glass-2); border: 1px solid var(--glass-border); color: var(--muted);
+}
+.pill-c { background: rgba(34, 197, 94, 0.18); border-color: rgba(34, 197, 94, 0.4); color: var(--accent); }
+.pill-v { background: rgba(56, 130, 246, 0.18); border-color: rgba(56, 130, 246, 0.42); color: #7fb0ff; }
+.chip-card { display: inline-block; width: 9px; height: 12px; border-radius: 2px; vertical-align: middle; }
+.chip-yellow { background: #f5c842; }
+.chip-red { background: var(--danger); }
+
+/* ── Checkbox lists (bulk copy) ──────────────────────────────────────────── */
+.check-list {
+  display: flex; flex-direction: column; gap: 0.15rem; overflow-y: auto;
+  border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 0.4rem;
+}
+.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.15rem 0.6rem; }
+.check-row {
+  display: flex; align-items: center; gap: 0.55rem; cursor: pointer;
+  padding: 0.4rem 0.5rem; border-radius: 9px; font-size: 0.9rem;
+}
+.check-row:hover { background: var(--glass); }
+.check-row input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+
+/* ── Formation view ──────────────────────────────────────────────────────── */
+.warn-card { border-color: rgba(245, 200, 66, 0.35); background: rgba(245, 200, 66, 0.06); }
+.lineup-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.5rem; margin-bottom: 1.1rem;
+}
+.lineup-card {
+  display: flex; align-items: center; gap: 0.55rem;
+  background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 0.55rem 0.7rem;
+}
+.lineup-card.bench { opacity: 0.72; }
+.lineup-name { flex: 1; min-width: 0; font-weight: 600; font-size: 0.9rem; }
+.shirt-badge {
+  display: inline-flex; align-items: center; gap: 0.25rem; flex: none;
+  min-width: 34px; justify-content: center; font-weight: 800; font-size: 0.82rem;
+  padding: 0.2rem 0.4rem; border-radius: 8px;
+  background: rgba(34, 197, 94, 0.14); border: 1px solid rgba(34, 197, 94, 0.28); color: var(--accent);
+}
+
+/* ── Formation editor rows ───────────────────────────────────────────────── */
+.lineup-edit-row {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 0.45rem 0.6rem;
+}
+.lineup-edit-row.on { border-color: rgba(34, 197, 94, 0.32); background: rgba(34, 197, 94, 0.06); }
+.lineup-edit-controls { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.shirt-input { width: 52px; text-align: center; padding: 0.4rem 0.3rem; }
+.pill-btn {
+  min-width: 32px; min-height: 32px; padding: 0.3rem 0.5rem; border-radius: 8px; cursor: pointer;
+  font-weight: 800; font-size: 0.8rem; color: var(--muted);
+  background: var(--glass); border: 1px solid var(--glass-border);
+  -webkit-tap-highlight-color: transparent; transition: all 0.15s ease;
+}
+.pill-btn.pill-c { background: rgba(34, 197, 94, 0.2); border-color: rgba(34, 197, 94, 0.45); color: var(--accent); }
+.pill-btn.pill-v { background: rgba(56, 130, 246, 0.2); border-color: rgba(56, 130, 246, 0.45); color: #7fb0ff; }

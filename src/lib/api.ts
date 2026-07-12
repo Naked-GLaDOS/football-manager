@@ -7,7 +7,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+      // Only JSON string bodies get this header; FormData must keep the browser's
+      // auto-generated multipart boundary.
+      ...(typeof init?.body === 'string' ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
@@ -82,15 +84,107 @@ export interface MatchEvent {
   createdAt: string;
 }
 
-export interface Match {
+export interface LineupEntry {
+  id: string;
+  shirtNumber: number | null;
+  starter: boolean;
+  captain: boolean;
+  viceCaptain: boolean;
+  player: { id: string; firstName: string | null; lastName: string | null; role: string | null } | null;
+}
+
+// Match-sheet (distinta) staff / metadata fields on a match. All optional.
+export interface MatchStaff {
+  distintaNumber: string | null;
+  competition: string | null;
+  coachName: string | null;
+  assistantCoachName: string | null;
+  directorName: string | null;
+  matchOfficialsDirectorName: string | null;
+  doctorName: string | null;
+  masseurName: string | null;
+  athleticTrainerName: string | null;
+  goalkeeperTrainerName: string | null;
+  assistantRefereeName: string | null;
+}
+
+export const MATCH_STAFF_KEYS = [
+  'coachName', 'assistantCoachName', 'directorName', 'matchOfficialsDirectorName',
+  'doctorName', 'masseurName', 'athleticTrainerName', 'goalkeeperTrainerName', 'assistantRefereeName',
+] as const;
+
+export interface Match extends MatchStaff {
   id: string;
   opponent: string;
   date: string;
   matchType: string;
   comment: string;
   events: MatchEvent[];
+  lineup: LineupEntry[];
   createdAt: string;
   updatedAt: string;
+}
+
+// One line-up row as sent to the server when saving a formation.
+export interface LineupInput {
+  playerId: string;
+  shirtNumber?: number | null;
+  starter: boolean;
+  captain: boolean;
+  viceCaptain: boolean;
+}
+
+// ── Player statistics ──────────────────────────────────────────────────────────
+export interface PerMatchStat {
+  matchId: string;
+  date: string;
+  opponent: string;
+  matchType: string;
+  inLineup: boolean;
+  starter: boolean;
+  shirtNumber: number | null;
+  minutes: number;
+  goals: number;
+  yellowCards: number;
+  redCards: number;
+  subbedIn: boolean;
+  subbedOut: boolean;
+}
+
+export interface PlayerStats {
+  totalMinutes: number;
+  matchesPlayed: number;
+  matchesStarted: number;
+  matchesInLineup: number;
+  goals: number;
+  yellowCards: number;
+  redCards: number;
+  subsIn: number;
+  subsOut: number;
+  minutesByMatchType: { matchType: string; minutes: number }[];
+  perMatch: PerMatchStat[];
+}
+
+// ── Parsed distinta (returned by the parse endpoint, not persisted) ─────────────
+export interface ParsedPlayer {
+  order: number | null;
+  shirtNumber: number | null;
+  birthDate: string | null;
+  matricola: string | null;
+  rawName: string;
+  captain: boolean;
+  viceCaptain: boolean;
+  starter: boolean;
+  matchedPlayerId: string | null;
+}
+
+export interface ParsedDistinta {
+  distintaNumber: string | null;
+  competition: string | null;
+  players: ParsedPlayer[];
+  staff: Omit<MatchStaff, 'distintaNumber' | 'competition'>;
+  unmatchedCount: number;
+  warnings: string[];
 }
 
 // Payloads for creating an event (discriminated by `type`).
@@ -164,6 +258,26 @@ export const api = {
     request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/events`, { method: 'POST', body: body(data) }),
   deleteMatchEvent: (teamId: string, seasonId: string, matchId: string, id: string) =>
     request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/events/${id}`, { method: 'DELETE' }),
+
+  // Formation / line-up (starting XI + bench + match-sheet staff)
+  saveFormation: (
+    teamId: string, seasonId: string, matchId: string,
+    data: { lineup: LineupInput[]; staff?: Partial<MatchStaff> },
+  ) =>
+    request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/formation`, { method: 'PUT', body: body(data) }),
+  // Upload a distinta PDF; returns parsed data for review (does not persist).
+  parseDistinta: (teamId: string, seasonId: string, matchId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request<ParsedDistinta>(
+      `/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/lineup/parse-distinta`,
+      { method: 'POST', body: form },
+    );
+  },
+
+  // Player statistics (per season)
+  playerStats: (teamId: string, seasonId: string, playerId: string) =>
+    request<PlayerStats>(`/teams/${teamId}/seasons/${seasonId}/players/${playerId}/stats`),
 
   // Admin / CMS
   adminTeams: () => request<AdminTeam[]>('/admin/teams'),

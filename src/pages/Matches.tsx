@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, type Match, type Person, type SeasonSettings } from '../lib/api';
+import { api, type Match, type SeasonSettings } from '../lib/api';
 import { useSession } from '../lib/session';
-import MatchDetail from '../components/MatchDetail';
+import { useNav } from '../lib/nav';
 import { IconPlus, IconTrash } from '../components/Icons';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
@@ -9,14 +9,13 @@ const todayInput = () => new Date().toISOString().slice(0, 10);
 export default function Matches() {
   const s = useSession();
   const { t, teamId, seasonId, editable, me } = s;
+  const nav = useNav();
 
   const [matches, setMatches] = useState<Match[]>([]);
-  const [players, setPlayers] = useState<Person[]>([]);
   const [settings, setSettings] = useState<SeasonSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [editing, setEditing] = useState<Match | 'new' | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const teamName = useMemo(
     () => me?.teams.find((tm) => tm.id === teamId)?.name ?? t('team'),
@@ -27,13 +26,11 @@ export default function Matches() {
     if (!teamId || !seasonId) return;
     setLoading(true);
     try {
-      const [m, p, st] = await Promise.all([
+      const [m, st] = await Promise.all([
         api.matches(teamId, seasonId),
-        api.roster('players', teamId, seasonId),
         api.settings(teamId, seasonId),
       ]);
       setMatches(m);
-      setPlayers(p);
       setSettings(st);
     } finally {
       setLoading(false);
@@ -42,18 +39,16 @@ export default function Matches() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Replace a single match in the list after an event/comment change.
-  const upsert = (m: Match) =>
-    setMatches((prev) => prev.map((x) => (x.id === m.id ? m : x)));
-
   const saveMatch = async (data: { opponent: string; date: string; matchType: string }) => {
     if (!teamId || !seasonId) return;
     if (editing === 'new') {
       const created = await api.createMatch(teamId, seasonId, data);
       setMatches((prev) => [created, ...prev]);
+      // Jump straight into the new match to set up the formation.
+      nav.open({ type: 'match', id: created.id });
     } else if (editing) {
       const updated = await api.updateMatch(teamId, seasonId, editing.id, data);
-      upsert(updated);
+      setMatches((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
     }
     setEditing(null);
   };
@@ -62,10 +57,7 @@ export default function Matches() {
     if (!teamId || !seasonId || !confirm(t('confirmDelete'))) return;
     await api.deleteMatch(teamId, seasonId, m.id);
     setMatches((prev) => prev.filter((x) => x.id !== m.id));
-    if (selectedId === m.id) setSelectedId(null);
   };
-
-  const selected = matches.find((m) => m.id === selectedId) ?? null;
 
   if (!teamId) return <p className="empty">{t('noTeam')}</p>;
 
@@ -90,7 +82,7 @@ export default function Matches() {
             const d = new Date(m.date);
             const goals = m.events.filter((e) => e.type === 'GOAL').length;
             return (
-              <div key={m.id} className="card interactive match-card" onClick={() => setSelectedId(m.id)}>
+              <div key={m.id} className="card interactive match-card" onClick={() => nav.open({ type: 'match', id: m.id })}>
                 <div className="match-date">
                   <div className="d">{isNaN(d.getTime()) ? '–' : d.getDate()}</div>
                   <div className="m">{isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { month: 'short' })}</div>
@@ -122,27 +114,12 @@ export default function Matches() {
           onClose={() => setEditing(null)}
         />
       )}
-
-      {selected && settings && teamId && seasonId && (
-        <MatchDetail
-          match={selected}
-          players={players}
-          settings={settings}
-          teamName={teamName}
-          canEdit={editable}
-          teamId={teamId}
-          seasonId={seasonId}
-          onUpdated={upsert}
-          onEdit={() => { const m = selected; setSelectedId(null); setEditing(m); }}
-          onClose={() => setSelectedId(null)}
-        />
-      )}
     </div>
   );
 }
 
 // ── Add / edit match form (opponent, date, type) ─────────────────────────────
-function MatchForm({
+export function MatchForm({
   initial, matchTypes, onSave, onClose,
 }: {
   initial: Match | null;

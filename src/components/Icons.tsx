@@ -56,3 +56,21 @@ export const IconMatches = ({ size = 22 }: P) => (
 export const IconTrash = ({ size = 16 }: P) => (
   <svg {...base(size)}><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M10 11v6M14 11v6" /></svg>
 );
+export const IconBack = ({ size = 18 }: P) => (
+  <svg {...base(size)}><path d="M15 5l-7 7 7 7M8 12h12" /></svg>
+);
+export const IconDownload = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M12 4v11M8 11l4 4 4-4M5 20h14" /></svg>
+);
+export const IconUpload = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M12 16V5M8 9l4-4 4 4M5 20h14" /></svg>
+);
+export const IconStats = ({ size = 18 }: P) => (
+  <svg {...base(size)}><path d="M4 20V10M10 20V4M16 20v-8M22 20H2" /></svg>
+);
+export const IconShirt = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M9 3 4 6l2 4 2-1v9h8v-9l2 1 2-4-5-3a3 3 0 0 1-6 0z" /></svg>
+);
+export const IconList = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" /></svg>
+);

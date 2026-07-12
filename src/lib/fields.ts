@@ -1,11 +1,26 @@
 import type { TKey } from './i18n';
-import type { Kind } from './api';
+import type { Kind, Person } from './api';
 
 export type FieldType = 'text' | 'date' | 'phone' | 'email' | 'role';
 
 export interface FieldDef {
   key: string; // matches Person property + i18n key
   type: FieldType;
+}
+
+const fmtDate = (v: string) => {
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? v : d.toLocaleDateString();
+};
+
+// Displayed (and copied/exported) value for a field: translated role, formatted
+// date, else the raw string. Returns null when the person has no value.
+export function fieldValue(person: Person, f: FieldDef, t: (k: TKey) => string): string | null {
+  const raw = (person as any)[f.key] as string | null | undefined;
+  if (!raw) return null;
+  if (f.type === 'role') return t(raw as TKey);
+  if (f.type === 'date') return fmtDate(raw);
+  return raw;
 }
 
 // Personal fields shared by players and staff, in display order.

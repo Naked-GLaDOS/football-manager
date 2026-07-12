@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SessionProvider, useSession } from './lib/session';
+import { NavProvider, useNav } from './lib/nav';
 import Login from './pages/Login';
 import Layout, { type View } from './components/Layout';
 import Roster from './pages/Roster';
@@ -7,10 +8,16 @@ import Genitori from './pages/Genitori';
 import Matches from './pages/Matches';
 import Impostazioni from './pages/Impostazioni';
 import Cms from './pages/Cms';
+import PlayerPage from './pages/PlayerPage';
+import MatchPage from './pages/MatchPage';
 
 function Shell() {
   const s = useSession();
-  const [view, setView] = useState<View>('players');
+  const nav = useNav();
+  const [view, setViewState] = useState<View>('players');
+
+  // Switching tabs always leaves any open detail page.
+  const setView = (v: View) => { nav.close(); setViewState(v); };
 
   // Admins live in the CMS; regular users in the roster views. Keep the active
   // view consistent with the account type.
@@ -25,12 +32,20 @@ function Shell() {
 
   return (
     <Layout view={view} setView={setView}>
-      {view === 'players' && <Roster kind="players" />}
-      {view === 'staff' && <Roster kind="staff" />}
-      {view === 'genitori' && <Genitori />}
-      {view === 'matches' && <Matches />}
-      {view === 'settings' && <Impostazioni />}
-      {view === 'cms' && <Cms />}
+      {nav.detail?.type === 'player' ? (
+        <PlayerPage playerId={nav.detail.id} />
+      ) : nav.detail?.type === 'match' ? (
+        <MatchPage matchId={nav.detail.id} />
+      ) : (
+        <>
+          {view === 'players' && <Roster kind="players" />}
+          {view === 'staff' && <Roster kind="staff" />}
+          {view === 'genitori' && <Genitori />}
+          {view === 'matches' && <Matches />}
+          {view === 'settings' && <Impostazioni />}
+          {view === 'cms' && <Cms />}
+        </>
+      )}
     </Layout>
   );
 }
@@ -38,7 +53,9 @@ function Shell() {
 export default function App() {
   return (
     <SessionProvider>
-      <Shell />
+      <NavProvider>
+        <Shell />
+      </NavProvider>
     </SessionProvider>
   );
 }
