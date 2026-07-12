@@ -3,16 +3,16 @@ import { api, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
 import { IconShare, IconEdit } from '../components/Icons';
 
-// Share a parent's name + phone via the native share sheet (PWA/mobile), with a
-// WhatsApp / clipboard fallback on desktop browsers without the Web Share API.
-async function shareContact(name: string | null, phone: string | null, title: string) {
-  const text = [name, phone].filter(Boolean).join(' — ');
+// Share a pre-built, localised contact line (e.g. `Padre di "Rossi Mario": Francesco — 12345`)
+// via the native share sheet (PWA/mobile), with a WhatsApp / clipboard fallback on desktop
+// browsers without the Web Share API.
+async function shareContact(text: string, phone: string | null, title: string) {
   if (!text) return;
   if (navigator.share) {
     try { await navigator.share({ title, text }); return; } catch { /* cancelled */ }
   }
   const digits = (phone || '').replace(/[^\d+]/g, '').replace(/^\+/, '');
-  if (digits) { window.open(`https://wa.me/${digits}?text=${encodeURIComponent(name || '')}`, '_blank'); return; }
+  if (digits) { window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank'); return; }
   try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
 }
 
@@ -57,9 +57,11 @@ export default function Genitori() {
                 )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(11rem,1fr))', gap: '0.6rem' }}>
-                <ParentCard label={t('father')} name={p.fatherName ?? null} phone={p.fatherPhone ?? null}
+                <ParentCard label={t('father')} of={t('parentOf')} player={name(p)}
+                  name={p.fatherName ?? null} phone={p.fatherPhone ?? null}
                   shareLabel={t('shareContact')} unknown={t('unknown')} share={t('share')} />
-                <ParentCard label={t('mother')} name={p.motherName ?? null} phone={p.motherPhone ?? null}
+                <ParentCard label={t('mother')} of={t('parentOf')} player={name(p)}
+                  name={p.motherName ?? null} phone={p.motherPhone ?? null}
                   shareLabel={t('shareContact')} unknown={t('unknown')} share={t('share')} />
               </div>
             </div>
@@ -79,10 +81,15 @@ export default function Genitori() {
   );
 }
 
-function ParentCard({ label, name, phone, share, shareLabel, unknown }: {
-  label: string; name: string | null; phone: string | null; share: string; shareLabel: string; unknown: string;
+function ParentCard({ label, of, player, name, phone, share, shareLabel, unknown }: {
+  label: string; of: string; player: string; name: string | null; phone: string | null;
+  share: string; shareLabel: string; unknown: string;
 }) {
   const has = name || phone;
+  // e.g. `Padre di "Rossi Mario": Francesco — 12345` (localised via `label` and `of`)
+  const prefix = `${label} ${of} "${player}"`;
+  const contact = [name, phone].map((v) => v?.trim()).filter(Boolean).join(' — ');
+  const shareText = contact ? `${prefix}: ${contact}` : prefix;
   return (
     <div style={{
       background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)',
@@ -93,7 +100,7 @@ function ParentCard({ label, name, phone, share, shareLabel, unknown }: {
       <div className="muted" style={{ fontSize: '0.85rem' }}>{phone || unknown}</div>
       {has && (
         <button className="btn btn-ghost btn-sm" style={{ marginTop: '0.55rem', width: '100%' }}
-          onClick={() => shareContact(name, phone, shareLabel)}>
+          onClick={() => shareContact(shareText, phone, shareLabel)}>
           <IconShare /> {share}
         </button>
       )}

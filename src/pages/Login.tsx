@@ -86,9 +86,10 @@ export default function Login() {
             </button>
           </form>
 
-          <button className="btn btn-sm" style={{ background: 'none', marginTop: '1rem', color: 'var(--muted)' }}
-            onClick={() => setLang(lang === 'it' ? 'en' : 'it')}>
-            {lang === 'it' ? '🇬🇧 English' : '🇮🇹 Italiano'}
+          <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: '1rem' }}
+            onClick={() => setLang(lang === 'it' ? 'en' : 'it')}
+            aria-label={lang === 'it' ? 'Cambia lingua' : 'Change language'}>
+            🌐 {lang === 'it' ? '🇮🇹 Italiano' : '🇬🇧 English'}
           </button>
         </div>
       </main>

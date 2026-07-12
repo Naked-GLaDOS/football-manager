@@ -208,6 +208,35 @@ button { font-family: inherit; }
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
 
+/* ── Detail list (read-only person view with per-field copy) ─────────────── */
+.detail-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.detail-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 0.55rem 0.6rem 0.55rem 0.85rem;
+}
+.detail-main { flex: 1; min-width: 0; }
+.detail-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.detail-value { font-weight: 600; margin-top: 0.1rem; word-break: break-word; }
+.detail-value.muted { font-weight: 500; }
+
+/* ── Settings (match config + tag lists) ─────────────────────────────────── */
+.settings-heading { margin: 0 0 0.8rem; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+.chip-list { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.tag {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.4rem 0.75rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+  background: var(--glass); border: 1px solid var(--glass-border);
+}
+.tag-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: none; padding: 0; margin-right: -0.15rem;
+  color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease;
+}
+.tag-x:hover { color: var(--danger); }
+.tag-static { background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.25); color: var(--text); }
+
 /* ── Segmented control / chips / badges ──────────────────────────────────── */
 .segmented {
   display: inline-flex; gap: 0.2rem; padding: 0.25rem;
@@ -232,6 +261,48 @@ button { font-family: inherit; }
   padding: 0.15rem 0.45rem; border-radius: 6px; vertical-align: middle;
   background: rgba(34, 197, 94, 0.18); color: var(--accent); border: 1px solid rgba(34, 197, 94, 0.3);
 }
+
+/* ── Matches timeline ────────────────────────────────────────────────────── */
+.timeline { display: flex; flex-direction: column; gap: 0.6rem; position: relative; }
+.match-card { display: flex; align-items: center; gap: 0.8rem; cursor: pointer; }
+.match-date {
+  flex: none; width: 46px; text-align: center; line-height: 1;
+  border-right: 1px solid var(--glass-border); padding-right: 0.7rem;
+}
+.match-date .d { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+.match-date .m { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.15rem; }
+.match-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; align-items: center; }
+
+/* Event pills inside the match detail */
+.event-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 0.5rem 0.55rem 0.5rem 0.75rem;
+}
+.event-icon {
+  flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+  font-size: 0.9rem; background: var(--glass); border: 1px solid var(--glass-border);
+}
+.event-main { flex: 1; min-width: 0; }
+.event-title { font-weight: 600; font-size: 0.9rem; }
+.event-sub { color: var(--muted); font-size: 0.78rem; margin-top: 0.1rem; }
+.event-time {
+  flex: none; font-weight: 700; font-size: 0.78rem; color: var(--accent);
+  background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 8px; padding: 0.2rem 0.45rem; white-space: nowrap;
+}
+.subcount { font-weight: 700; }
+.subcount.full { color: var(--danger); }
+.textarea {
+  width: 100%; min-height: 7rem; resize: vertical; font-family: inherit; font-size: 0.95rem;
+  color: var(--text); background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border); border-radius: 12px; padding: 0.7rem 0.85rem; outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.textarea::placeholder { color: var(--muted); }
+.textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16); }
+.card-yellow { background: rgba(245, 200, 66, 0.16); border-color: rgba(245, 200, 66, 0.4); }
+.card-red { background: rgba(248, 113, 113, 0.16); border-color: rgba(248, 113, 113, 0.4); }
 
 /* ── Modal / bottom sheet ────────────────────────────────────────────────── */
 .overlay {

@@ -22,6 +22,8 @@ const dict = {
     players: 'Giocatori',
     staff: 'Staff',
     parents: 'Genitori',
+    matches: 'Partite',
+    settings: 'Impostazioni',
     cms: 'Gestione',
 
     add: 'Aggiungi',
@@ -34,6 +36,11 @@ const dict = {
     unknown: 'Sconosciuto',
     empty: 'Nessun dato',
     search: 'Cerca',
+    details: 'Dettagli',
+    close: 'Chiudi',
+    copy: 'Copia',
+    copied: 'Copiato',
+    copyAll: 'Copia tutto',
 
     // person fields
     firstName: 'Nome',
@@ -61,11 +68,70 @@ const dict = {
     // genitori
     father: 'Padre',
     mother: 'Madre',
+    parentOf: 'di',
     parentName: 'Nome',
     parentPhone: 'Telefono',
     share: 'Condividi',
     shareContact: 'Condividi contatto',
     noParents: 'Nessun dato genitori',
+
+    // settings
+    matchSettings: 'Partita',
+    periods: 'Numero di tempi',
+    periodMinutes: 'Durata di un tempo (minuti)',
+    matchTypes: 'Tipi di partita',
+    maxSubstitutions: 'Numero massimo di sostituzioni',
+    newMatchType: 'Nuovo tipo di partita',
+    addType: 'Aggiungi',
+    minutesShort: 'min',
+    absenceReasons: 'Motivi di mancata presenza',
+    absenceReasonsHint: 'Usati per registrare i minuti giocati da ogni giocatore.',
+    saved: 'Salvato',
+    saveSettings: 'Salva impostazioni',
+    // absence reasons (why a player did not play)
+    ABS_NOT_PLAYED: 'Non Disputata',
+    ABS_NOT_CALLABLE: 'Non Convocabile',
+    ABS_NOT_CALLED: 'Non Convocato',
+    ABS_INJURED: 'Infortunato',
+    ABS_CALLED_ABSENT: 'Convocato ma Assente',
+    ABS_PUNISHMENT: 'Punizione',
+
+    // matches
+    newMatch: 'Nuova partita',
+    editMatch: 'Modifica partita',
+    matchName: 'Nome',
+    opponent: 'Avversario',
+    matchNameHint: 'La tua squadra viene aggiunta automaticamente.',
+    matchDate: 'Data',
+    matchTypeLabel: 'Tipo di partita',
+    noMatches: 'Nessuna partita',
+    events: 'Eventi',
+    noEvents: 'Nessun evento registrato',
+    substitution: 'Sostituzione',
+    card: 'Cartellino',
+    goal: 'Goal',
+    playerIn: 'Entra',
+    playerOut: 'Esce',
+    minute: 'Minuto',
+    period: 'Tempo',
+    firstHalf: '1º tempo',
+    secondHalf: '2º tempo',
+    periodN: 'tempo',
+    yellow: 'Giallo',
+    red: 'Rosso',
+    cardColor: 'Colore',
+    scorer: 'Marcatore',
+    player: 'Giocatore',
+    selectPlayer: 'Seleziona giocatore',
+    substitutionsUsed: 'Sostituzioni',
+    optional: 'facoltativo',
+    comment: 'Commento',
+    commentPlaceholder: 'Scrivi qui le tue annotazioni sulla partita…',
+    saveComment: 'Salva commento',
+    addSubstitution: 'Aggiungi sostituzione',
+    addCard: 'Aggiungi cartellino',
+    addGoal: 'Aggiungi goal',
+    subsLimitReached: 'Numero massimo di sostituzioni raggiunto',
 
     // cms
     manageTeams: 'Squadre',
@@ -96,6 +162,8 @@ const dict = {
     players: 'Players',
     staff: 'Staff',
     parents: 'Parents',
+    matches: 'Matches',
+    settings: 'Settings',
     cms: 'Admin',
 
     add: 'Add',
@@ -108,6 +176,11 @@ const dict = {
     unknown: 'Unknown',
     empty: 'No data',
     search: 'Search',
+    details: 'Details',
+    close: 'Close',
+    copy: 'Copy',
+    copied: 'Copied',
+    copyAll: 'Copy all',
 
     firstName: 'Name',
     lastName: 'Surname',
@@ -131,11 +204,70 @@ const dict = {
 
     father: 'Father',
     mother: 'Mother',
+    parentOf: 'of',
     parentName: 'Name',
     parentPhone: 'Phone',
     share: 'Share',
     shareContact: 'Share contact',
     noParents: 'No parent data',
+
+    // settings
+    matchSettings: 'Match',
+    periods: 'Number of periods',
+    periodMinutes: 'Period length (minutes)',
+    matchTypes: 'Match types',
+    maxSubstitutions: 'Maximum substitutions',
+    newMatchType: 'New match type',
+    addType: 'Add',
+    minutesShort: 'min',
+    absenceReasons: 'Reasons for not playing',
+    absenceReasonsHint: 'Used to track the minutes each player played.',
+    saved: 'Saved',
+    saveSettings: 'Save settings',
+    // absence reasons (why a player did not play)
+    ABS_NOT_PLAYED: 'Not played',
+    ABS_NOT_CALLABLE: 'Not selectable',
+    ABS_NOT_CALLED: 'Not called up',
+    ABS_INJURED: 'Injured',
+    ABS_CALLED_ABSENT: 'Called up but absent',
+    ABS_PUNISHMENT: 'Disciplinary',
+
+    // matches
+    newMatch: 'New match',
+    editMatch: 'Edit match',
+    matchName: 'Name',
+    opponent: 'Opponent',
+    matchNameHint: 'Your team is added automatically.',
+    matchDate: 'Date',
+    matchTypeLabel: 'Match type',
+    noMatches: 'No matches',
+    events: 'Events',
+    noEvents: 'No events recorded',
+    substitution: 'Substitution',
+    card: 'Card',
+    goal: 'Goal',
+    playerIn: 'In',
+    playerOut: 'Out',
+    minute: 'Minute',
+    period: 'Period',
+    firstHalf: '1st half',
+    secondHalf: '2nd half',
+    periodN: 'period',
+    yellow: 'Yellow',
+    red: 'Red',
+    cardColor: 'Colour',
+    scorer: 'Scorer',
+    player: 'Player',
+    selectPlayer: 'Select player',
+    substitutionsUsed: 'Substitutions',
+    optional: 'optional',
+    comment: 'Comment',
+    commentPlaceholder: 'Write your notes about the match here…',
+    saveComment: 'Save comment',
+    addSubstitution: 'Add substitution',
+    addCard: 'Add card',
+    addGoal: 'Add goal',
+    subsLimitReached: 'Maximum number of substitutions reached',
 
     manageTeams: 'Teams',
     manageUsers: 'Users',
@@ -156,3 +288,14 @@ export function translator(lang: Lang) {
 
 export const PLAYER_ROLES = ['ATTACKER', 'MIDFIELDER', 'DEFENDER', 'GOALKEEPER'] as const;
 export const STAFF_ROLES = ['DIRECTOR', 'COACH', 'ATHLETIC_TRAINER', 'GOALKEEPER_TRAINER'] as const;
+
+// Fixed set of reasons a player did not play in a match. Kept as translated
+// constants (like roles) — they'll back the minutes-tracking feature later.
+export const ABSENCE_REASONS = [
+  'ABS_NOT_PLAYED', // Non Disputata — la partita non è stata giocata
+  'ABS_NOT_CALLABLE', // Non Convocabile
+  'ABS_NOT_CALLED', // Non Convocato
+  'ABS_INJURED', // Infortunato
+  'ABS_CALLED_ABSENT', // Convocato ma Assente
+  'ABS_PUNISHMENT', // Punizione
+] as const;

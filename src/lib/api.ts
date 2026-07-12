@@ -53,6 +53,52 @@ export interface Person {
   motherPhone?: string | null;
 }
 
+export interface SeasonSettings {
+  periods: number;
+  periodMinutes: number;
+  matchTypes: string[];
+  maxSubstitutions: number;
+  editable: boolean;
+}
+
+export type MatchEventType = 'SUBSTITUTION' | 'CARD' | 'GOAL';
+export type CardColor = 'YELLOW' | 'RED';
+
+export interface EventPlayer {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+export interface MatchEvent {
+  id: string;
+  type: MatchEventType;
+  period: number | null;
+  minute: number | null;
+  playerIn: EventPlayer | null;
+  playerOut: EventPlayer | null;
+  player: EventPlayer | null;
+  card: CardColor | null;
+  createdAt: string;
+}
+
+export interface Match {
+  id: string;
+  opponent: string;
+  date: string;
+  matchType: string;
+  comment: string;
+  events: MatchEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Payloads for creating an event (discriminated by `type`).
+export type NewMatchEvent =
+  | { type: 'SUBSTITUTION'; period: number; minute: number; playerInId: string; playerOutId: string }
+  | { type: 'CARD'; period: number | null; minute: number | null; playerId: string; card: CardColor }
+  | { type: 'GOAL'; period: number | null; minute: number | null; playerId: string };
+
 export interface AdminUser {
   id: string; email: string; role: 'ADMIN' | 'USER'; teamIds: string[];
 }
@@ -98,6 +144,26 @@ export const api = {
     request<Person>(`/teams/${teamId}/seasons/${seasonId}/${kind}/${id}`, { method: 'PATCH', body: body(data) }),
   deletePerson: (kind: Kind, teamId: string, seasonId: string, id: string) =>
     request<{ ok: boolean }>(`/teams/${teamId}/seasons/${seasonId}/${kind}/${id}`, { method: 'DELETE' }),
+
+  // Season settings (per team+season)
+  settings: (teamId: string, seasonId: string) =>
+    request<SeasonSettings>(`/teams/${teamId}/seasons/${seasonId}/settings`),
+  updateSettings: (teamId: string, seasonId: string, data: Omit<SeasonSettings, 'editable'>) =>
+    request<SeasonSettings>(`/teams/${teamId}/seasons/${seasonId}/settings`, { method: 'PUT', body: body(data) }),
+
+  // Matches (per team+season)
+  matches: (teamId: string, seasonId: string) =>
+    request<Match[]>(`/teams/${teamId}/seasons/${seasonId}/matches`),
+  createMatch: (teamId: string, seasonId: string, data: { opponent: string; date: string; matchType: string }) =>
+    request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches`, { method: 'POST', body: body(data) }),
+  updateMatch: (teamId: string, seasonId: string, id: string, data: Partial<{ opponent: string; date: string; matchType: string; comment: string }>) =>
+    request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${id}`, { method: 'PATCH', body: body(data) }),
+  deleteMatch: (teamId: string, seasonId: string, id: string) =>
+    request<{ ok: boolean }>(`/teams/${teamId}/seasons/${seasonId}/matches/${id}`, { method: 'DELETE' }),
+  addMatchEvent: (teamId: string, seasonId: string, matchId: string, data: NewMatchEvent) =>
+    request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/events`, { method: 'POST', body: body(data) }),
+  deleteMatchEvent: (teamId: string, seasonId: string, matchId: string, id: string) =>
+    request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/events/${id}`, { method: 'DELETE' }),
 
   // Admin / CMS
   adminTeams: () => request<AdminTeam[]>('/admin/teams'),

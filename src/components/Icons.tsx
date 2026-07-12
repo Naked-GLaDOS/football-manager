@@ -38,3 +38,21 @@ export const IconEye = ({ size = 16 }: P) => (
 export const IconPlus = ({ size = 18 }: P) => (
   <svg {...base(size)}><path d="M12 5v14M5 12h14" /></svg>
 );
+export const IconCopy = ({ size = 16 }: P) => (
+  <svg {...base(size)}><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+);
+export const IconCheck = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M20 6 9 17l-5-5" /></svg>
+);
+export const IconSettings = ({ size = 22 }: P) => (
+  <svg {...base(size)}><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h6M14 18h6" /><circle cx="16" cy="6" r="2" /><circle cx="8" cy="12" r="2" /><circle cx="12" cy="18" r="2" /></svg>
+);
+export const IconClose = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M18 6 6 18M6 6l12 12" /></svg>
+);
+export const IconMatches = ({ size = 22 }: P) => (
+  <svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M12 8l3.2 2.3-1.2 3.7h-4L8.8 10.3 12 8z" /></svg>
+);
+export const IconTrash = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M10 11v6M14 11v6" /></svg>
+);

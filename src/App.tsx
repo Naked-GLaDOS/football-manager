@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Layout, { type View } from './components/Layout';
 import Roster from './pages/Roster';
 import Genitori from './pages/Genitori';
+import Matches from './pages/Matches';
+import Impostazioni from './pages/Impostazioni';
 import Cms from './pages/Cms';
 
 function Shell() {
@@ -26,6 +28,8 @@ function Shell() {
       {view === 'players' && <Roster kind="players" />}
       {view === 'staff' && <Roster kind="staff" />}
       {view === 'genitori' && <Genitori />}
+      {view === 'matches' && <Matches />}
+      {view === 'settings' && <Impostazioni />}
       {view === 'cms' && <Cms />}
     </Layout>
   );

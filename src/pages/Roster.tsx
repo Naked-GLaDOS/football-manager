@@ -3,7 +3,8 @@ import { api, type Kind, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
 import type { TKey } from '../lib/i18n';
 import PersonForm from '../components/PersonForm';
-import { IconPlus, IconEdit, IconEye } from '../components/Icons';
+import PersonDetail from '../components/PersonDetail';
+import { IconPlus, IconEdit } from '../components/Icons';
 
 export default function Roster({ kind }: { kind: Kind }) {
   const s = useSession();
@@ -11,6 +12,7 @@ export default function Roster({ kind }: { kind: Kind }) {
   const [rows, setRows] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Person | null | 'new'>(null);
+  const [viewing, setViewing] = useState<Person | null>(null);
 
   const load = useCallback(async () => {
     if (!teamId || !seasonId) return;
@@ -59,18 +61,21 @@ export default function Roster({ kind }: { kind: Kind }) {
       ) : (
         <div className="stack">
           {rows.map((p) => (
-            <div key={p.id} className="card interactive row" onClick={() => setEditing(p)} style={{ cursor: 'pointer' }}>
+            <div key={p.id} className="card interactive row" onClick={() => setViewing(p)} style={{ cursor: 'pointer' }}>
               <div className="avatar">{initials(p)}</div>
               <div className="row-main">
                 <div className="row-title">{name(p)}</div>
                 <div className="row-sub">
-                  {p.role ? t(p.role as TKey) : t('unknown')}{p.phone ? ` · ${p.phone}` : ''}
+                  {p.role ? t(p.role as TKey) : t('unknown')}
+                  {p.registrationNumber ? ` · ${t('registrationNumber')} ${p.registrationNumber}` : ''}
                 </div>
               </div>
-              <button className="btn btn-ghost btn-sm btn-icon" onClick={(e) => { e.stopPropagation(); setEditing(p); }}
-                title={editable ? t('edit') : ''}>
-                {editable ? <IconEdit /> : <IconEye />}
-              </button>
+              {editable && (
+                <button className="btn btn-ghost btn-sm btn-icon" onClick={(e) => { e.stopPropagation(); setEditing(p); }}
+                  title={t('edit')}>
+                  <IconEdit />
+                </button>
+              )}
               {editable && (
                 <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); remove(p); }}>
                   {t('delete')}
@@ -79,6 +84,16 @@ export default function Roster({ kind }: { kind: Kind }) {
             </div>
           ))}
         </div>
+      )}
+
+      {viewing && (
+        <PersonDetail
+          kind={kind}
+          person={viewing}
+          canEdit={editable}
+          onEdit={() => { const p = viewing; setViewing(null); setEditing(p); }}
+          onClose={() => setViewing(null)}
+        />
       )}
 
       {editing !== null && (
