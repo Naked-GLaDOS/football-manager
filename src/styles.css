@@ -31,6 +31,10 @@
 
 * { box-sizing: border-box; }
 
+/* Disable the browser's pull-to-refresh / overscroll gesture app-wide so
+   scrolling down at the top never reloads the page (which loses in-progress
+   input). Set on both html and body for cross-browser coverage. */
+html { overscroll-behavior: none; }
 html, body, #root { height: 100%; }
 
 body {
@@ -196,6 +200,8 @@ button { font-family: inherit; }
 .muted { color: var(--muted); }
 .empty { text-align: center; color: var(--muted); padding: 3rem 1rem; }
 .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.9rem; }
+.grid-fields.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-fields.grid-3 .field > label { font-size: 0.68rem; }
 
 /* ── Row item ────────────────────────────────────────────────────────────── */
 .row { display: flex; align-items: center; gap: 0.8rem; }
@@ -311,9 +317,13 @@ button { font-family: inherit; }
   -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
   display: flex; align-items: center; justify-content: center; padding: 1rem;
   animation: fade 0.15s ease;
+  /* Swiping down on the backdrop (or a non-scrolling sheet) must not chain to the
+     page behind and trigger the browser's pull-to-refresh. */
+  overscroll-behavior: none;
 }
 .modal {
   width: 100%; max-width: 34rem; max-height: 90dvh; overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1.4rem;
   background: rgba(20, 27, 45, 0.86);
   -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
@@ -337,6 +347,15 @@ button { font-family: inherit; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
 @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
+
+/* ── Per-match-type config rows (settings) ───────────────────────────────── */
+.type-config {
+  padding: 0.8rem; border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.03);
+}
+.type-config-head { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.7rem; }
+.type-config-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.type-config-fields .field > label { font-size: 0.68rem; }
 
 /* ── Auth ────────────────────────────────────────────────────────────────── */
 .auth { min-height: 100dvh; display: grid; place-items: center; padding: 1.2rem; padding-top: max(1.2rem, env(safe-area-inset-top)); }

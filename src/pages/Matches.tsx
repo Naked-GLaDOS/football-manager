@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, type Match, type SeasonSettings } from '../lib/api';
+import { api, resolveMatchDuration, type Match, type MatchInput, type MatchTypeConfig, type SeasonSettings } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
+import { useBackDismiss } from '../lib/backnav';
 import { IconPlus, IconTrash } from '../components/Icons';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
@@ -39,7 +40,7 @@ export default function Matches() {
 
   useEffect(() => { load(); }, [load]);
 
-  const saveMatch = async (data: { opponent: string; date: string; matchType: string }) => {
+  const saveMatch = async (data: MatchInput) => {
     if (!teamId || !seasonId) return;
     if (editing === 'new') {
       const created = await api.createMatch(teamId, seasonId, data);
@@ -109,7 +110,7 @@ export default function Matches() {
       {editing !== null && settings && (
         <MatchForm
           initial={editing === 'new' ? null : editing}
-          matchTypes={settings.matchTypes}
+          configs={settings.matchTypeConfigs}
           onSave={saveMatch}
           onClose={() => setEditing(null)}
         />
@@ -118,26 +119,55 @@ export default function Matches() {
   );
 }
 
-// ── Add / edit match form (opponent, date, type) ─────────────────────────────
+// ── Add / edit match form (opponent, date, type, per-match duration) ──────────
+const clampInt = (v: string, min: number, max: number, fallback: number) => {
+  const n = parseInt(v, 10);
+  if (Number.isNaN(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+};
+
 export function MatchForm({
-  initial, matchTypes, onSave, onClose,
+  initial, configs, onSave, onClose,
 }: {
   initial: Match | null;
-  matchTypes: string[];
-  onSave: (data: { opponent: string; date: string; matchType: string }) => Promise<void>;
+  configs: MatchTypeConfig[];
+  onSave: (data: MatchInput) => Promise<void>;
   onClose: () => void;
 }) {
   const { t } = useSession();
+  useBackDismiss(true, onClose);
+  const typeNames = useMemo(() => configs.map((c) => c.name), [configs]);
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
   const [date, setDate] = useState(initial ? initial.date.slice(0, 10) : todayInput());
-  const [matchType, setMatchType] = useState(initial?.matchType ?? matchTypes[0] ?? '');
+  const [matchType, setMatchType] = useState(initial?.matchType ?? typeNames[0] ?? '');
+
+  // Per-match duration. Seeded from the existing match's effective values when
+  // editing, else from the first type's config. Changing the type resets these
+  // to that type's defaults so each match starts from its type's template.
+  const seed = initial
+    ? resolveMatchDuration(initial, configs)
+    : (configs[0] ?? { periods: 2, periodMinutes: 45, maxSubstitutions: 5 });
+  const [periods, setPeriods] = useState(String(seed.periods));
+  const [periodMinutes, setPeriodMinutes] = useState(String(seed.periodMinutes));
+  const [maxSubs, setMaxSubs] = useState(String(seed.maxSubstitutions));
+
+  const pickType = (name: string) => {
+    setMatchType(name);
+    const cfg = configs.find((c) => c.name === name);
+    if (cfg) {
+      setPeriods(String(cfg.periods));
+      setPeriodMinutes(String(cfg.periodMinutes));
+      setMaxSubs(String(cfg.maxSubstitutions));
+    }
+  };
+
   // Keep an existing match's type selectable even if it was later removed from
   // the season's list, so editing other fields never silently rewrites it.
   const typeOptions = useMemo(
-    () => (initial && initial.matchType && !matchTypes.includes(initial.matchType)
-      ? [initial.matchType, ...matchTypes]
-      : matchTypes),
-    [initial, matchTypes],
+    () => (initial && initial.matchType && !typeNames.includes(initial.matchType)
+      ? [initial.matchType, ...typeNames]
+      : typeNames),
+    [initial, typeNames],
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -149,7 +179,12 @@ export function MatchForm({
     if (!canSave) return;
     setSaving(true); setError('');
     try {
-      await onSave({ opponent: opponent.trim(), date, matchType });
+      await onSave({
+        opponent: opponent.trim(), date, matchType,
+        periods: clampInt(periods, 1, 20, seed.periods),
+        periodMinutes: clampInt(periodMinutes, 1, 240, seed.periodMinutes),
+        maxSubstitutions: clampInt(maxSubs, 0, 30, seed.maxSubstitutions),
+      });
     } catch (err: any) {
       setError(err.message || 'Error'); setSaving(false);
     }
@@ -174,10 +209,33 @@ export function MatchForm({
           </div>
           <div className="field">
             <label>{t('matchTypeLabel')}</label>
-            <select className="select" value={matchType} onChange={(e) => setMatchType(e.target.value)}>
+            <select className="select" value={matchType} onChange={(e) => pickType(e.target.value)}>
               {typeOptions.length === 0 && <option value="">—</option>}
               {typeOptions.map((mt) => <option key={mt} value={mt}>{mt}</option>)}
             </select>
+          </div>
+        </div>
+
+        {/* Per-match duration — pre-filled from the type, editable for this match */}
+        <h3 className="settings-heading" style={{ marginTop: '1.1rem' }}>{t('matchDuration')}</h3>
+        <div className="grid-fields grid-3">
+          <div className="field">
+            <label>{t('periodsShort')}</label>
+            <input className="input" type="number" min={1} max={20} inputMode="numeric"
+              value={periods} onChange={(e) => setPeriods(e.target.value)}
+              onBlur={() => setPeriods((v) => String(clampInt(v, 1, 20, seed.periods)))} />
+          </div>
+          <div className="field">
+            <label>{t('periodMinutesShort')}</label>
+            <input className="input" type="number" min={1} max={240} inputMode="numeric"
+              value={periodMinutes} onChange={(e) => setPeriodMinutes(e.target.value)}
+              onBlur={() => setPeriodMinutes((v) => String(clampInt(v, 1, 240, seed.periodMinutes)))} />
+          </div>
+          <div className="field">
+            <label>{t('maxSubstitutionsShort')}</label>
+            <input className="input" type="number" min={0} max={30} inputMode="numeric"
+              value={maxSubs} onChange={(e) => setMaxSubs(e.target.value)}
+              onBlur={() => setMaxSubs((v) => String(clampInt(v, 0, 30, seed.maxSubstitutions)))} />
           </div>
         </div>
 

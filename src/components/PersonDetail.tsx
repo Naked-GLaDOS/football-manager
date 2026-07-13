@@ -4,6 +4,7 @@ import { useSession } from '../lib/session';
 import { fieldsFor, fieldValue } from '../lib/fields';
 import type { TKey } from '../lib/i18n';
 import { copyText } from '../lib/clipboard';
+import { useBackDismiss } from '../lib/backnav';
 import PersonFields from './PersonFields';
 import { IconCopy, IconCheck, IconEdit } from './Icons';
 
@@ -15,6 +16,7 @@ export default function PersonDetail({ kind, person, canEdit, onEdit, onClose }:
   onClose: () => void;
 }) {
   const { t } = useSession();
+  useBackDismiss(true, onClose);
   const [copied, setCopied] = useState(false);
 
   const name = [person.lastName, person.firstName].filter(Boolean).join(' ') || t('unknown');

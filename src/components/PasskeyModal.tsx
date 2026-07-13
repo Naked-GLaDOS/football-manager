@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { startRegistration } from '@simplewebauthn/browser';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useBackDismiss } from '../lib/backnav';
 import { IconKey } from './Icons';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 export default function PasskeyModal({ onDone }: Props) {
   const { t, lang } = useSession();
+  useBackDismiss(true, onDone);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 

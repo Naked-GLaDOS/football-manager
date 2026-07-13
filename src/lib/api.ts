@@ -55,12 +55,43 @@ export interface Person {
   motherPhone?: string | null;
 }
 
-export interface SeasonSettings {
+// One match type's default match configuration.
+export interface MatchTypeConfig {
+  name: string;
   periods: number;
   periodMinutes: number;
-  matchTypes: string[];
   maxSubstitutions: number;
+}
+
+export interface SeasonSettings {
+  // Global template applied to newly added match types.
+  periods: number;
+  periodMinutes: number;
+  maxSubstitutions: number;
+  // Per-type configuration (each type carries its own default duration).
+  matchTypeConfigs: MatchTypeConfig[];
   editable: boolean;
+}
+
+// Effective duration for a single match: its own override → type config → default.
+export interface MatchDuration {
+  periods: number;
+  periodMinutes: number;
+  maxSubstitutions: number;
+}
+
+export const MATCH_DURATION_DEFAULT: MatchDuration = { periods: 2, periodMinutes: 45, maxSubstitutions: 5 };
+
+export function resolveMatchDuration(
+  match: Pick<Match, 'matchType' | 'periods' | 'periodMinutes' | 'maxSubstitutions'>,
+  configs: MatchTypeConfig[],
+): MatchDuration {
+  const cfg = configs.find((c) => c.name === match.matchType);
+  return {
+    periods: match.periods ?? cfg?.periods ?? MATCH_DURATION_DEFAULT.periods,
+    periodMinutes: match.periodMinutes ?? cfg?.periodMinutes ?? MATCH_DURATION_DEFAULT.periodMinutes,
+    maxSubstitutions: match.maxSubstitutions ?? cfg?.maxSubstitutions ?? MATCH_DURATION_DEFAULT.maxSubstitutions,
+  };
 }
 
 export type MatchEventType = 'SUBSTITUTION' | 'CARD' | 'GOAL';
@@ -118,11 +149,26 @@ export interface Match extends MatchStaff {
   opponent: string;
   date: string;
   matchType: string;
-  comment: string;
+  // Per-match duration overrides (null = inherit the match type's config).
+  periods: number | null;
+  periodMinutes: number | null;
+  maxSubstitutions: number | null;
+  comment: string; // note about own team
+  opponentComment: string; // note about the opposing team
   events: MatchEvent[];
   lineup: LineupEntry[];
   createdAt: string;
   updatedAt: string;
+}
+
+// Payload for creating/updating a match's core fields (incl. per-match duration).
+export interface MatchInput {
+  opponent: string;
+  date: string;
+  matchType: string;
+  periods?: number | null;
+  periodMinutes?: number | null;
+  maxSubstitutions?: number | null;
 }
 
 // One line-up row as sent to the server when saving a formation.
@@ -324,9 +370,9 @@ export const api = {
   // Matches (per team+season)
   matches: (teamId: string, seasonId: string) =>
     request<Match[]>(`/teams/${teamId}/seasons/${seasonId}/matches`),
-  createMatch: (teamId: string, seasonId: string, data: { opponent: string; date: string; matchType: string }) =>
+  createMatch: (teamId: string, seasonId: string, data: MatchInput) =>
     request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches`, { method: 'POST', body: body(data) }),
-  updateMatch: (teamId: string, seasonId: string, id: string, data: Partial<{ opponent: string; date: string; matchType: string; comment: string }>) =>
+  updateMatch: (teamId: string, seasonId: string, id: string, data: Partial<MatchInput> & { comment?: string; opponentComment?: string }) =>
     request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${id}`, { method: 'PATCH', body: body(data) }),
   deleteMatch: (teamId: string, seasonId: string, id: string) =>
     request<{ ok: boolean }>(`/teams/${teamId}/seasons/${seasonId}/matches/${id}`, { method: 'DELETE' }),

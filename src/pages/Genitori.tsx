@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useBackDismiss } from '../lib/backnav';
 import { IconShare, IconEdit } from '../components/Icons';
 
 // Share a pre-built, localised contact line (e.g. `Padre di "Rossi Mario": Francesco — 12345`)
@@ -112,6 +113,7 @@ function ParentsEditor({ player, onSave, onClose }: {
   player: Person; onSave: (d: Partial<Person>) => Promise<void>; onClose: () => void;
 }) {
   const { t } = useSession();
+  useBackDismiss(true, onClose);
   const [f, setF] = useState({
     fatherName: player.fatherName ?? '', fatherPhone: player.fatherPhone ?? '',
     motherName: player.motherName ?? '', motherPhone: player.motherPhone ?? '',

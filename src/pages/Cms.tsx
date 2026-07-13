@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, type AdminTeam, type AdminUser } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useBackDismiss } from '../lib/backnav';
 import { IconPlus, IconEdit } from '../components/Icons';
 
 export default function Cms() {
@@ -113,6 +114,7 @@ function UserEditor({ user, teams, onClose, onSaved }: {
   user: AdminUser | null; teams: AdminTeam[]; onClose: () => void; onSaved: () => Promise<void>;
 }) {
   const { t } = useSession();
+  useBackDismiss(true, onClose);
   const [email, setEmail] = useState(user?.email ?? '');
   const [password, setPassword] = useState('');
   const [teamIds, setTeamIds] = useState<string[]>(user?.teamIds ?? []);

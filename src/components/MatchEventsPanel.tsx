@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { api, type Match, type MatchEvent, type NewMatchEvent, type Person, type SeasonSettings } from '../lib/api';
+import { api, type Match, type MatchDuration, type MatchEvent, type NewMatchEvent, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
 import { IconPlus, IconTrash } from './Icons';
 
@@ -11,11 +11,11 @@ type EventKind = MatchEvent['type'];
 // Events list + add-event form for a match. Extracted from the former MatchDetail
 // modal so it can live inside the full-page match view.
 export default function MatchEventsPanel({
-  match, players, settings, canEdit, teamId, seasonId, onUpdated,
+  match, players, duration, canEdit, teamId, seasonId, onUpdated,
 }: {
   match: Match;
   players: Person[];
-  settings: SeasonSettings;
+  duration: MatchDuration;
   canEdit: boolean;
   teamId: string;
   seasonId: string;
@@ -24,7 +24,7 @@ export default function MatchEventsPanel({
   const { t } = useSession();
 
   const periodLabel = (p: number) => {
-    if (settings.periods === 2) return p === 1 ? t('firstHalf') : t('secondHalf');
+    if (duration.periods === 2) return p === 1 ? t('firstHalf') : t('secondHalf');
     return `${p}º ${t('periodN')}`;
   };
   const moment = (e: Pick<MatchEvent, 'period' | 'minute'>): string | null => {
@@ -36,12 +36,12 @@ export default function MatchEventsPanel({
   const pName = (p: { firstName: string | null; lastName: string | null } | null) => personName(p, t('unknown'));
 
   const periodOptions = useMemo(
-    () => Array.from({ length: settings.periods }, (_, i) => i + 1),
-    [settings.periods],
+    () => Array.from({ length: duration.periods }, (_, i) => i + 1),
+    [duration.periods],
   );
 
   const subsUsed = match.events.filter((e) => e.type === 'SUBSTITUTION').length;
-  const subsFull = settings.maxSubstitutions > 0 && subsUsed >= settings.maxSubstitutions;
+  const subsFull = duration.maxSubstitutions > 0 && subsUsed >= duration.maxSubstitutions;
 
   const [kind, setKind] = useState<EventKind>('SUBSTITUTION');
   const [period, setPeriod] = useState('1');
@@ -116,7 +116,7 @@ export default function MatchEventsPanel({
       {/* Substitution counter */}
       <div className="card" style={{ marginBottom: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span className="settings-heading" style={{ margin: 0 }}>{t('substitutionsUsed')}</span>
-        <span className={`subcount${subsFull ? ' full' : ''}`}>{subsUsed} / {settings.maxSubstitutions}</span>
+        <span className={`subcount${subsFull ? ' full' : ''}`}>{subsUsed} / {duration.maxSubstitutions}</span>
       </div>
 
       <h3 className="settings-heading">{t('events')}</h3>

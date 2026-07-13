@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Kind, Person } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useBackDismiss } from '../lib/backnav';
 import { fieldsFor, fieldValue } from '../lib/fields';
 import type { TKey } from '../lib/i18n';
 import { copyText, shareText } from '../lib/clipboard';
@@ -15,6 +16,7 @@ export default function BulkCopyModal({ kind, people, title, onClose }: {
   onClose: () => void;
 }) {
   const { t } = useSession();
+  useBackDismiss(true, onClose);
   const fields = fieldsFor(kind);
 
   // Default: every player selected, Name + Surname fields.

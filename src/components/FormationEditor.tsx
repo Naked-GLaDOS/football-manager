@@ -93,6 +93,27 @@ export default function FormationEditor({
     [entries],
   );
 
+  // Order the roster primarily by the shirt number assigned here, then by name.
+  // Players without a number (or not yet included) fall after the numbered ones.
+  const sortedPlayers = useMemo(() => {
+    const shirtNum = (id: string): number | null => {
+      const raw = entries[id]?.shirt?.trim();
+      if (!raw) return null;
+      const n = parseInt(raw, 10);
+      return Number.isNaN(n) ? null : n;
+    };
+    return [...players].sort((a, b) => {
+      const na = shirtNum(a.id);
+      const nb = shirtNum(b.id);
+      if (na !== nb) {
+        if (na == null) return 1;
+        if (nb == null) return -1;
+        return na - nb;
+      }
+      return personName(a, '').localeCompare(personName(b, ''), undefined, { sensitivity: 'base' });
+    });
+  }, [players, entries]);
+
   const toggleInclude = (id: string) => {
     setEntries((prev) => {
       const next = { ...prev };
@@ -178,7 +199,7 @@ export default function FormationEditor({
       <p className="muted" style={{ fontSize: '0.78rem', margin: '0 0 0.6rem' }}>{t('selectStarters')}</p>
 
       <div className="stack">
-        {players.map((p) => {
+        {sortedPlayers.map((p) => {
           const e = entries[p.id];
           const included = !!e;
           return (

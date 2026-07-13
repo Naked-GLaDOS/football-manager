@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Kind, Person } from '../lib/api';
 import { useSession } from '../lib/session';
+import { useBackDismiss } from '../lib/backnav';
 import { fieldsFor } from '../lib/fields';
 import { PLAYER_ROLES, STAFF_ROLES, type TKey } from '../lib/i18n';
 
@@ -16,6 +17,7 @@ export default function PersonForm({
   onClose: () => void;
 }) {
   const { t } = useSession();
+  useBackDismiss(true, onClose);
   const fields = fieldsFor(kind);
   const roleOptions = kind === 'players' ? PLAYER_ROLES : STAFF_ROLES;
 

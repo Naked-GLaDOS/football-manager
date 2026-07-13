@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, type Match, type Person, type SeasonSettings } from '../lib/api';
+import { api, resolveMatchDuration, type Match, type MatchInput, type Person, type SeasonSettings } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
@@ -50,16 +50,16 @@ export default function MatchPage({ matchId }: { matchId: string }) {
 
   const onUpdated = (m: Match) => setMatch(m);
 
-  const saveMeta = async (data: { opponent: string; date: string; matchType: string }) => {
+  const saveMeta = async (data: MatchInput) => {
     if (!teamId || !seasonId || !match) return;
     const updated = await api.updateMatch(teamId, seasonId, match.id, data);
     setMatch(updated);
     setEditingMeta(false);
   };
 
-  const saveComment = async (comment: string) => {
+  const saveComment = async (data: { comment?: string; opponentComment?: string }) => {
     if (!teamId || !seasonId || !match) return;
-    const updated = await api.updateMatch(teamId, seasonId, match.id, { comment });
+    const updated = await api.updateMatch(teamId, seasonId, match.id, data);
     setMatch(updated);
   };
 
@@ -73,6 +73,8 @@ export default function MatchPage({ matchId }: { matchId: string }) {
   const dateLabel = new Date(match.date).toLocaleDateString(s.lang, {
     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
   });
+  // This match's effective duration (its own override → type config → default).
+  const duration = resolveMatchDuration(match, settings.matchTypeConfigs);
 
   return (
     <div>
@@ -85,6 +87,7 @@ export default function MatchPage({ matchId }: { matchId: string }) {
           <div className="match-meta">
             <span className="muted" style={{ fontSize: '0.82rem' }}>{dateLabel}</span>
             <span className="tag tag-static">{match.matchType}</span>
+            <span className="tag tag-static">{duration.periods}×{duration.periodMinutes}′</span>
           </div>
         </div>
         {editable && (
@@ -105,7 +108,7 @@ export default function MatchPage({ matchId }: { matchId: string }) {
           teamId={teamId!} seasonId={seasonId!} onUpdated={onUpdated} />
       )}
       {tab === 'events' && (
-        <MatchEventsPanel match={match} players={players} settings={settings} canEdit={editable}
+        <MatchEventsPanel match={match} players={players} duration={duration} canEdit={editable}
           teamId={teamId!} seasonId={seasonId!} onUpdated={onUpdated} />
       )}
       {tab === 'comment' && (
@@ -113,7 +116,7 @@ export default function MatchPage({ matchId }: { matchId: string }) {
       )}
 
       {editingMeta && (
-        <MatchForm initial={match} matchTypes={settings.matchTypes} onSave={saveMeta} onClose={() => setEditingMeta(false)} />
+        <MatchForm initial={match} configs={settings.matchTypeConfigs} onSave={saveMeta} onClose={() => setEditingMeta(false)} />
       )}
     </div>
   );
@@ -170,14 +173,24 @@ function FormationTab({ match, players, canEdit, teamId, seasonId, onUpdated }: 
     );
   }
 
-  const starters = match.lineup.filter((l) => l.starter);
-  const bench = match.lineup.filter((l) => !l.starter);
+  const lineName = (l: Match['lineup'][number]) => personName(l.player, t('unknown'));
+  // Sort by shirt number first, then name; unnumbered players fall last.
+  const byShirtThenName = (a: Match['lineup'][number], b: Match['lineup'][number]) => {
+    const na = a.shirtNumber;
+    const nb = b.shirtNumber;
+    if (na !== nb) {
+      if (na == null) return 1;
+      if (nb == null) return -1;
+      return na - nb;
+    }
+    return lineName(a).localeCompare(lineName(b), undefined, { sensitivity: 'base' });
+  };
+  const starters = match.lineup.filter((l) => l.starter).sort(byShirtThenName);
+  const bench = match.lineup.filter((l) => !l.starter).sort(byShirtThenName);
   const staffShown = [...META_FIELDS, ...STAFF_FIELDS]
     .map((f) => ({ label: f.label as TKey, value: (match as any)[f.key] as string | null }))
     .filter((x) => x.value);
   const isEmpty = match.lineup.length === 0 && staffShown.length === 0;
-
-  const lineName = (l: Match['lineup'][number]) => personName(l.player, t('unknown'));
 
   return (
     <div>
@@ -250,19 +263,42 @@ function FormationTab({ match, players, canEdit, teamId, seasonId, onUpdated }: 
 }
 
 // ── Comment tab ────────────────────────────────────────────────────────────────
+// Two independent notes per match: one about the user's own team, one about the
+// opponent. Each saves on its own so a coach can jot down either side alone.
 function CommentTab({ match, canEdit, onSave }: {
-  match: Match; canEdit: boolean; onSave: (c: string) => Promise<void>;
+  match: Match; canEdit: boolean;
+  onSave: (data: { comment?: string; opponentComment?: string }) => Promise<void>;
 }) {
   const { t } = useSession();
-  const [comment, setComment] = useState(match.comment ?? '');
+  return (
+    <div className="stack" style={{ gap: '1.4rem' }}>
+      <CommentField label={t('commentTeam')} placeholder={t('commentTeamPlaceholder')}
+        value={match.comment ?? ''} canEdit={canEdit}
+        onSave={(v) => onSave({ comment: v })} />
+      <CommentField label={t('commentOpponent')} placeholder={t('commentOpponentPlaceholder')}
+        value={match.opponentComment ?? ''} canEdit={canEdit}
+        onSave={(v) => onSave({ opponentComment: v })} />
+    </div>
+  );
+}
+
+function CommentField({ label, placeholder, value, canEdit, onSave }: {
+  label: string; placeholder: string; value: string; canEdit: boolean;
+  onSave: (v: string) => Promise<void>;
+}) {
+  const { t } = useSession();
+  const [text, setText] = useState(value);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const dirty = comment !== (match.comment ?? '');
+  const dirty = text !== value;
+
+  // Keep the field in sync when the match reloads (e.g. after saving the other note).
+  useEffect(() => { setText(value); }, [value]);
 
   const save = async () => {
     setSaving(true);
     try {
-      await onSave(comment);
+      await onSave(text);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 1600);
     } finally {
@@ -272,9 +308,10 @@ function CommentTab({ match, canEdit, onSave }: {
 
   return (
     <div>
-      <textarea className="textarea" value={comment} disabled={!canEdit}
-        placeholder={t('commentPlaceholder')} onChange={(e) => setComment(e.target.value)}
-        style={{ minHeight: 200 }} />
+      <h3 className="settings-heading" style={{ marginTop: 0 }}>{label}</h3>
+      <textarea className="textarea" value={text} disabled={!canEdit}
+        placeholder={placeholder} onChange={(e) => setText(e.target.value)}
+        style={{ minHeight: 150 }} />
       {canEdit && (
         <button className="btn btn-ghost btn-sm" style={{ marginTop: '0.6rem' }}
           disabled={!dirty || saving} onClick={save}>

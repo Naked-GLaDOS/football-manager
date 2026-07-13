@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SessionProvider, useSession } from './lib/session';
 import { NavProvider, useNav } from './lib/nav';
+import { BackNavProvider, useBackDismiss } from './lib/backnav';
 import { NotificationProvider } from './lib/notifications';
 import Login from './pages/Login';
 import Layout, { type View } from './components/Layout';
@@ -30,6 +31,12 @@ function Shell() {
   }, [s.authed, s.isAdmin, view]);
 
   const openMatch = useCallback((id: string) => nav.open({ type: 'match', id }), [nav]);
+
+  // Hardware Back: first leave any open detail view, then fall back to the home
+  // tab from a secondary tab, before the browser exits the app.
+  const homeView: View = s.isAdmin ? 'cms' : 'players';
+  useBackDismiss(!!nav.detail, nav.close);
+  useBackDismiss(s.authed && view !== homeView, () => setView(homeView));
 
   if (!s.ready) return <div className="spinner-page">…</div>;
   if (!s.authed) return <Login />;
@@ -62,7 +69,9 @@ export default function App() {
   return (
     <SessionProvider>
       <NavProvider>
-        <Shell />
+        <BackNavProvider>
+          <Shell />
+        </BackNavProvider>
       </NavProvider>
     </SessionProvider>
   );
