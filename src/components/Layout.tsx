@@ -1,6 +1,8 @@
 import { useSession } from '../lib/session';
+import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
-import { IconPlayers, IconStaff, IconParents, IconMatches, IconAdmin, IconSettings, IconGlobe, IconLogout } from './Icons';
+import NotificationBell from './NotificationBell';
+import { IconPlayers, IconStaff, IconParents, IconMatches, IconAdmin, IconSettings, IconGlobe, IconLogout, IconUser } from './Icons';
 
 export type View = 'players' | 'staff' | 'genitori' | 'matches' | 'settings' | 'cms';
 
@@ -17,6 +19,7 @@ export default function Layout({
   view, setView, children,
 }: { view: View; setView: (v: View) => void; children: React.ReactNode }) {
   const s = useSession();
+  const nav = useNav();
   const { t } = s;
   // Admins only get the CMS (teams + users). Regular users get the roster views.
   const items = NAV.filter((n) => (s.isAdmin ? n.view === 'cms' : n.view !== 'cms'));
@@ -46,9 +49,13 @@ export default function Layout({
 
           <span className="spacer" />
 
+          <NotificationBell />
           <button className="btn btn-ghost btn-icon" title={t('language')}
             onClick={() => s.setLang(s.lang === 'it' ? 'en' : 'it')}>
             <IconGlobe /><span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{s.lang.toUpperCase()}</span>
+          </button>
+          <button className="btn btn-ghost btn-icon" title={t('account')} onClick={() => nav.open({ type: 'account' })}>
+            <IconUser />
           </button>
           <button className="btn btn-ghost btn-icon" title={t('signOut')} onClick={s.logout}>
             <IconLogout />

@@ -440,3 +440,95 @@ button { font-family: inherit; }
 }
 .pill-btn.pill-c { background: rgba(34, 197, 94, 0.2); border-color: rgba(34, 197, 94, 0.45); color: var(--accent); }
 .pill-btn.pill-v { background: rgba(56, 130, 246, 0.2); border-color: rgba(56, 130, 246, 0.45); color: #7fb0ff; }
+
+/* ── Light theme (variable overrides + a few hard-coded surfaces) ─────────── */
+html[data-theme="light"] {
+  --bg-0: #e7ecf4;
+  --bg-1: #f6f8fc;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-2: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(15, 23, 42, 0.10);
+  --glass-border-2: rgba(15, 23, 42, 0.18);
+  --text: #12203a;
+  --muted: #5b6b82;
+  --shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.32);
+}
+html[data-theme="light"] body {
+  background:
+    radial-gradient(1100px 620px at 8% -8%, rgba(34, 197, 94, 0.14), transparent 60%),
+    radial-gradient(980px 680px at 112% 6%, rgba(16, 185, 129, 0.12), transparent 55%),
+    radial-gradient(880px 900px at 50% 118%, rgba(56, 130, 246, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-0));
+}
+html[data-theme="light"] .appbar { background: rgba(255, 255, 255, 0.74); }
+html[data-theme="light"] .tabbar { background: rgba(255, 255, 255, 0.82); }
+html[data-theme="light"] .input,
+html[data-theme="light"] .textarea,
+html[data-theme="light"] .select,
+html[data-theme="light"] .shirt-input { background: rgba(15, 23, 42, 0.035); }
+html[data-theme="light"] .modal,
+html[data-theme="light"] .notif-panel { background: rgba(255, 255, 255, 0.95); }
+html[data-theme="light"] .select option { background: #fff; }
+
+/* ── Notification bell + panel ───────────────────────────────────────────── */
+.notif { position: relative; display: inline-flex; }
+.notif-badge {
+  position: absolute; top: 3px; right: 3px;
+  min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box;
+  border-radius: 999px; background: var(--danger); color: #2a0808;
+  font-size: 0.6rem; font-weight: 800; line-height: 16px; text-align: center;
+}
+.notif-panel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 60;
+  width: min(23rem, 92vw); max-height: 70vh; overflow-y: auto;
+  background: rgba(20, 27, 45, 0.96);
+  -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--glass-border-2); border-radius: 16px;
+  box-shadow: var(--shadow); padding: 0.35rem;
+  animation: pop 0.16s ease;
+}
+.notif-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; padding: 0.45rem 0.55rem 0.55rem;
+}
+.notif-list { display: flex; flex-direction: column; gap: 2px; }
+.notif-item {
+  display: flex; align-items: flex-start; gap: 0.55rem; width: 100%; text-align: left;
+  background: none; border: none; padding: 0.6rem; border-radius: 11px; color: var(--text);
+  cursor: default; -webkit-tap-highlight-color: transparent;
+}
+.notif-item.clickable { cursor: pointer; }
+.notif-item.clickable:hover { background: var(--glass); }
+.notif-item.unread { background: rgba(34, 197, 94, 0.09); }
+.notif-dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--accent); }
+.notif-body { flex: 1; min-width: 0; }
+.notif-title { display: block; font-weight: 600; font-size: 0.88rem; }
+.notif-text { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 1px; }
+.notif-time { display: block; color: var(--muted); font-size: 0.7rem; margin-top: 3px; }
+
+/* ── Toggle switch ───────────────────────────────────────────────────────── */
+.switch { position: relative; display: inline-flex; flex: none; width: 44px; height: 26px; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 2; }
+.switch .track {
+  position: absolute; inset: 0; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.switch .thumb {
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--muted); transition: transform 0.2s ease, background 0.2s ease;
+}
+.switch input:checked ~ .track { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
+.switch input:checked ~ .thumb { transform: translateX(18px); background: #fff; }
+.switch input:disabled { cursor: default; }
+.switch input:disabled ~ .track { opacity: 0.5; }
+
+/* ── Settings/list rows (account page) ───────────────────────────────────── */
+.setting-row { display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 0; }
+.setting-row + .setting-row { border-top: 1px solid var(--glass-border); }
+.setting-main { flex: 1; min-width: 0; }
+.setting-label { font-weight: 600; font-size: 0.92rem; }
+.setting-hint { color: var(--muted); font-size: 0.8rem; margin-top: 0.15rem; }
+.list-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0; }
+.list-row + .list-row { border-top: 1px solid var(--glass-border); }
+.ok-text { color: var(--accent); font-weight: 600; font-size: 0.85rem; }

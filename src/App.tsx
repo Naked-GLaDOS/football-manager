@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SessionProvider, useSession } from './lib/session';
 import { NavProvider, useNav } from './lib/nav';
+import { NotificationProvider } from './lib/notifications';
 import Login from './pages/Login';
 import Layout, { type View } from './components/Layout';
 import Roster from './pages/Roster';
@@ -10,6 +11,7 @@ import Impostazioni from './pages/Impostazioni';
 import Cms from './pages/Cms';
 import PlayerPage from './pages/PlayerPage';
 import MatchPage from './pages/MatchPage';
+import Account from './pages/Account';
 
 function Shell() {
   const s = useSession();
@@ -27,26 +29,32 @@ function Shell() {
     if (!s.isAdmin && view === 'cms') setView('players');
   }, [s.authed, s.isAdmin, view]);
 
+  const openMatch = useCallback((id: string) => nav.open({ type: 'match', id }), [nav]);
+
   if (!s.ready) return <div className="spinner-page">…</div>;
   if (!s.authed) return <Login />;
 
   return (
-    <Layout view={view} setView={setView}>
-      {nav.detail?.type === 'player' ? (
-        <PlayerPage playerId={nav.detail.id} />
-      ) : nav.detail?.type === 'match' ? (
-        <MatchPage matchId={nav.detail.id} />
-      ) : (
-        <>
-          {view === 'players' && <Roster kind="players" />}
-          {view === 'staff' && <Roster kind="staff" />}
-          {view === 'genitori' && <Genitori />}
-          {view === 'matches' && <Matches />}
-          {view === 'settings' && <Impostazioni />}
-          {view === 'cms' && <Cms />}
-        </>
-      )}
-    </Layout>
+    <NotificationProvider onOpenMatch={openMatch}>
+      <Layout view={view} setView={setView}>
+        {nav.detail?.type === 'player' ? (
+          <PlayerPage playerId={nav.detail.id} />
+        ) : nav.detail?.type === 'match' ? (
+          <MatchPage matchId={nav.detail.id} />
+        ) : nav.detail?.type === 'account' ? (
+          <Account />
+        ) : (
+          <>
+            {view === 'players' && <Roster kind="players" />}
+            {view === 'staff' && <Roster kind="staff" />}
+            {view === 'genitori' && <Genitori />}
+            {view === 'matches' && <Matches />}
+            {view === 'settings' && <Impostazioni />}
+            {view === 'cms' && <Cms />}
+          </>
+        )}
+      </Layout>
+    </NotificationProvider>
   );
 }
 

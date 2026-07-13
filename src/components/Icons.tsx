@@ -74,3 +74,21 @@ export const IconShirt = ({ size = 16 }: P) => (
 export const IconList = ({ size = 16 }: P) => (
   <svg {...base(size)}><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" /></svg>
 );
+export const IconBell = ({ size = 20 }: P) => (
+  <svg {...base(size)}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+);
+export const IconUser = ({ size = 20 }: P) => (
+  <svg {...base(size)}><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6" /></svg>
+);
+export const IconDevice = ({ size = 18 }: P) => (
+  <svg {...base(size)}><rect x="2" y="4" width="20" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></svg>
+);
+export const IconLock = ({ size = 18 }: P) => (
+  <svg {...base(size)}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+);
+export const IconSun = ({ size = 18 }: P) => (
+  <svg {...base(size)}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" /></svg>
+);
+export const IconMoon = ({ size = 18 }: P) => (
+  <svg {...base(size)}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
+);

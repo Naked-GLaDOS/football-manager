@@ -6,7 +6,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // Custom service worker (src/sw.ts) so we can handle Web Push + notification
+      // clicks; workbox still precaches the built assets via injectManifest.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+      },
       manifest: {
         name: 'Football Manager',
         short_name: 'FM',
@@ -20,9 +28,6 @@ export default defineConfig({
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
       },
     }),
   ],

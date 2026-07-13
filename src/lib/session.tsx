@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { api, type Me, type Season } from './api';
+import { api, type Me, type Season, type Theme } from './api';
 import { translator, type Lang, type TKey } from './i18n';
 
 interface SessionState {
@@ -13,10 +13,12 @@ interface SessionState {
   season: Season | null;
   editable: boolean;
   lang: Lang;
+  theme: Theme;
   t: (k: TKey) => string;
   setTeam: (id: string) => void;
   setSeason: (id: string) => void;
   setLang: (l: Lang) => void;
+  setTheme: (t: Theme) => void;
   onLogin: () => Promise<void>;
   logout: () => void;
 }
@@ -27,7 +29,10 @@ const LS = {
   team: 'fm_team',
   season: 'fm_season',
   lang: 'fm_lang',
+  theme: 'fm_theme',
 };
+
+const applyTheme = (theme: Theme) => { document.documentElement.dataset.theme = theme; };
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -36,6 +41,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [teamId, setTeamId] = useState<string | null>(localStorage.getItem(LS.team));
   const [seasonId, setSeasonId] = useState<string | null>(localStorage.getItem(LS.season));
   const [lang, setLangState] = useState<Lang>((localStorage.getItem(LS.lang) as Lang) || 'it');
+  const [theme, setThemeState] = useState<Theme>((localStorage.getItem(LS.theme) as Theme) || 'dark');
 
   const load = useCallback(async () => {
     if (!localStorage.getItem('fm_token')) {
@@ -44,9 +50,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const [meData, seasonData] = await Promise.all([api.me(), api.seasons()]);
+      const [meData, seasonData, account] = await Promise.all([api.me(), api.seasons(), api.account()]);
       setMe(meData);
       setSeasons(seasonData.seasons);
+
+      // Server preferences win, so theme/language follow the user across devices.
+      setLangState(account.lang);
+      localStorage.setItem(LS.lang, account.lang);
+      setThemeState(account.theme);
+      localStorage.setItem(LS.theme, account.theme);
 
       // Pick sensible defaults if none stored / stored value is now invalid.
       setTeamId((prev) =>
@@ -65,6 +77,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { load(); }, [load]);
 
+  // Keep the <html data-theme> attribute in sync with the active theme.
+  useEffect(() => { applyTheme(theme); }, [theme]);
+
   useEffect(() => {
     const onUnauth = () => { setMe(null); };
     window.addEventListener('fm-unauthorized', onUnauth);
@@ -74,9 +89,23 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (teamId) localStorage.setItem(LS.team, teamId); }, [teamId]);
   useEffect(() => { if (seasonId) localStorage.setItem(LS.season, seasonId); }, [seasonId]);
 
-  const setLang = (l: Lang) => { setLangState(l); localStorage.setItem(LS.lang, l); };
+  // Persist preference changes locally and, when signed in, to the account so
+  // they sync across devices (fire-and-forget — the UI already updated).
+  const authed = !!me;
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem(LS.lang, l);
+    if (localStorage.getItem('fm_token')) api.updateAccount({ lang: l }).catch(() => {});
+  };
+  const setTheme = (t: Theme) => {
+    setThemeState(t);
+    localStorage.setItem(LS.theme, t);
+    if (localStorage.getItem('fm_token')) api.updateAccount({ theme: t }).catch(() => {});
+  };
 
   const logout = () => {
+    // Best-effort server-side revoke of the current session before clearing.
+    if (localStorage.getItem('fm_token')) api.logout().catch(() => {});
     localStorage.removeItem('fm_token');
     setMe(null);
     setSeasons([]);
@@ -86,7 +115,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const value: SessionState = {
     ready,
-    authed: !!me,
+    authed,
     me,
     isAdmin: me?.role === 'ADMIN',
     seasons,
@@ -95,10 +124,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     season,
     editable: season?.editable ?? false,
     lang,
+    theme,
     t: translator(lang),
     setTeam: setTeamId,
     setSeason: setSeasonId,
     setLang,
+    setTheme,
     onLogin: load,
     logout,
   };

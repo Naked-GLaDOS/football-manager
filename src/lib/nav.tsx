@@ -3,7 +3,11 @@ import { createContext, useCallback, useContext, useState } from 'react';
 // Lightweight in-app navigation for full-page detail views (single player, single
 // match) layered over the tab-based views — no router dependency. A `detail` of
 // null means the active tab's list/page is shown.
-export type Detail = { type: 'player'; id: string } | { type: 'match'; id: string } | null;
+export type Detail =
+  | { type: 'player'; id: string }
+  | { type: 'match'; id: string }
+  | { type: 'account' }
+  | null;
 
 interface NavState {
   detail: Detail;

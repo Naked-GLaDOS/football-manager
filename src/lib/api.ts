@@ -193,6 +193,48 @@ export type NewMatchEvent =
   | { type: 'CARD'; period: number | null; minute: number | null; playerId: string; card: CardColor }
   | { type: 'GOAL'; period: number | null; minute: number | null; playerId: string };
 
+// ── Account / notifications ─────────────────────────────────────────────────
+export type Theme = 'dark' | 'light';
+
+export interface AccountProfile {
+  id: string;
+  email: string;
+  name: string | null;
+  role: 'ADMIN' | 'USER';
+  theme: Theme;
+  lang: 'it' | 'en';
+  notifyFormationReminder: boolean;
+  notifyMatchDataReminder: boolean;
+  createdAt: string;
+  teams: Team[];
+}
+
+export interface AccountPasskey {
+  id: string; name: string | null; createdAt: string; lastUsedAt: string | null;
+}
+
+export interface AccountSession {
+  id: string; userAgent: string | null; ip: string | null;
+  lastSeenAt: string; createdAt: string; current: boolean;
+}
+
+export type NotificationType = 'FORMATION_REMINDER' | 'MATCH_DATA_REMINDER' | 'TEST';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  matchId: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface PushSubscriptionInput {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
 export interface AdminUser {
   id: string; email: string; role: 'ADMIN' | 'USER'; teamIds: string[];
 }
@@ -225,9 +267,43 @@ export const api = {
       '/auth/passkey/login/verify', { method: 'POST', body: body({ email, response }) },
     ),
 
+  logout: () => request<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+
   // Session
   me: () => request<Me>('/me'),
   seasons: () => request<{ currentSeasonId: string; seasons: Season[] }>('/seasons'),
+
+  // Account
+  account: () => request<AccountProfile>('/account'),
+  updateAccount: (data: Partial<Pick<AccountProfile,
+    'name' | 'email' | 'theme' | 'lang' | 'notifyFormationReminder' | 'notifyMatchDataReminder'>>) =>
+    request<AccountProfile>('/account', { method: 'PATCH', body: body(data) }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ ok: boolean }>('/account/password', { method: 'POST', body: body({ currentPassword, newPassword }) }),
+
+  accountPasskeys: () => request<AccountPasskey[]>('/account/passkeys'),
+  renamePasskey: (id: string, name: string) =>
+    request<{ ok: boolean }>(`/account/passkeys/${id}`, { method: 'PATCH', body: body({ name }) }),
+  deletePasskey: (id: string) =>
+    request<{ ok: boolean }>(`/account/passkeys/${id}`, { method: 'DELETE' }),
+
+  sessions: () => request<AccountSession[]>('/account/sessions'),
+  revokeSession: (id: string) => request<{ ok: boolean }>(`/account/sessions/${id}`, { method: 'DELETE' }),
+  revokeOtherSessions: () => request<{ ok: boolean }>('/account/sessions', { method: 'DELETE' }),
+
+  pushPublicKey: () => request<{ publicKey: string | null }>('/account/push/public-key'),
+  pushSubscribe: (sub: PushSubscriptionInput) =>
+    request<{ ok: boolean }>('/account/push/subscribe', { method: 'POST', body: body(sub) }),
+  pushUnsubscribe: (endpoint: string) =>
+    request<{ ok: boolean }>('/account/push/unsubscribe', { method: 'POST', body: body({ endpoint }) }),
+  pushTest: () => request<{ ok: boolean }>('/account/push/test', { method: 'POST' }),
+
+  // Notifications (in-app feed)
+  notifications: () => request<{ items: AppNotification[]; unreadCount: number }>('/notifications'),
+  markNotificationRead: (id: string) =>
+    request<{ ok: boolean }>(`/notifications/${id}/read`, { method: 'POST' }),
+  markAllNotificationsRead: () =>
+    request<{ ok: boolean }>('/notifications/read-all', { method: 'POST' }),
 
   // Roster (players / staff)
   roster: (kind: Kind, teamId: string, seasonId: string) =>
