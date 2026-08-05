@@ -10,6 +10,14 @@ import { IconPlus, IconTrash } from '../components/Icons';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
 
+// Today's UTC midnight in ms — training dates are stored at UTC midnight, so a
+// session is "future" when its date is strictly after this.
+const todayUtcMs = () => {
+  const n = new Date();
+  return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+};
+const isFuture = (tr: Training) => new Date(tr.date).getTime() > todayUtcMs();
+
 // Person's display name (surname first), or "unknown".
 const nameOf = (p: Person, fallback: string) =>
   [p.lastName, p.firstName].filter(Boolean).join(' ') || fallback;
@@ -53,6 +61,9 @@ export default function Trainings() {
 
   // Only active (non-skipped) sessions are shown and counted.
   const active = useMemo(() => trainings.filter((tr) => !tr.skipped), [trainings]);
+  // Statistics count only sessions that have already happened (not future ones).
+  const pastActive = useMemo(() => active.filter((tr) => !isFuture(tr)), [active]);
+  const hasFuture = useMemo(() => trainings.some((tr) => !tr.skipped && isFuture(tr)), [trainings]);
 
   const addTraining = async (date: string) => {
     if (!teamId || !seasonId) return;
@@ -70,6 +81,12 @@ export default function Trainings() {
     await api.deleteTraining(teamId, seasonId, tr.id);
     // Auto sessions are soft-skipped server-side; drop from the visible list either way.
     setTrainings((prev) => prev.filter((x) => x.id !== tr.id));
+  };
+
+  const removeFuture = async () => {
+    if (!teamId || !seasonId || !confirm(t('confirmDelete'))) return;
+    await api.deleteFutureTrainings(teamId, seasonId);
+    setTrainings((prev) => prev.filter((tr) => !isFuture(tr)));
   };
 
   const onSaved = (updated: Training) => {
@@ -102,10 +119,17 @@ export default function Trainings() {
       {loading ? (
         <p className="empty">{t('loading')}</p>
       ) : tab === 'statistics' ? (
-        <MonthlyStats trainings={active} roster={roster} />
+        <MonthlyStats trainings={pastActive} roster={roster} />
       ) : active.length === 0 ? (
         <p className="empty">{t('noTrainings')}</p>
       ) : (
+        <>
+        {editable && hasFuture && (
+          <button className="btn btn-ghost btn-sm" onClick={removeFuture}
+            style={{ marginBottom: '0.8rem', color: 'var(--danger)' }}>
+            <IconTrash /> {t('deleteFutureTrainings')}
+          </button>
+        )}
         <div className="timeline">
           {active.map((tr) => {
             const d = new Date(tr.date);
@@ -133,6 +157,7 @@ export default function Trainings() {
             );
           })}
         </div>
+        </>
       )}
 
       {adding && <AddTrainingModal onSave={addTraining} onClose={() => setAdding(false)} />}

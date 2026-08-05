@@ -457,6 +457,8 @@ export const api = {
     request<Training>(`/teams/${teamId}/seasons/${seasonId}/trainings`, { method: 'POST', body: body({ date }) }),
   deleteTraining: (teamId: string, seasonId: string, id: string) =>
     request<{ ok: boolean }>(`/teams/${teamId}/seasons/${seasonId}/trainings/${id}`, { method: 'DELETE' }),
+  deleteFutureTrainings: (teamId: string, seasonId: string) =>
+    request<{ ok: boolean; count: number }>(`/teams/${teamId}/seasons/${seasonId}/trainings/future`, { method: 'DELETE' }),
   saveAttendance: (teamId: string, seasonId: string, id: string, attendances: AttendanceInput[]) =>
     request<Training>(`/teams/${teamId}/seasons/${seasonId}/trainings/${id}/attendance`, {
       method: 'PUT', body: body({ attendances }),
