@@ -293,8 +293,10 @@ function AttendanceModal({
         ) : (
           <div className="stack">
             {roster.map((p) => (
-              <div key={p.id} className="card row" style={{ padding: '0.5rem 0.75rem', gap: '0.6rem' }}>
-                <span className="row-main row-title" style={{ fontSize: '0.9rem' }}>{nameOf(p, t('unknown'))}</span>
+              <div key={p.id} className="card" style={{ padding: '0.55rem 0.75rem' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.4rem' }}>
+                  {nameOf(p, t('unknown'))}
+                </div>
                 <select className="select compact" value={statuses[p.id] ?? ''} disabled={!canEdit}
                   onChange={(e) => setStatus(p.id, e.target.value as AttendanceStatus | '')}>
                   <option value="">{t('notRecorded')}</option>
