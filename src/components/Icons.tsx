@@ -95,3 +95,18 @@ export const IconSun = ({ size = 18 }: P) => (
 export const IconMoon = ({ size = 18 }: P) => (
   <svg {...base(size)}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
 );
+export const IconBall = ({ size = 16 }: P) => (
+  <svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M12 7.5l4.3 3.1-1.6 5h-5.4l-1.6-5L12 7.5z" /><path d="M12 3v4.5M4.8 9.5l3.9 2.8M19.2 9.5l-3.9 2.8M8.3 20l1.3-4.4M15.7 20l-1.3-4.4" /></svg>
+);
+export const IconSwap = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M4 8h13l-3-3M20 16H7l3 3" /></svg>
+);
+export const IconArrowUp = ({ size = 14 }: P) => (
+  <svg {...base(size)}><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+);
+export const IconArrowDown = ({ size = 14 }: P) => (
+  <svg {...base(size)}><path d="M12 5v14M6 13l6 6 6-6" /></svg>
+);
+export const IconAlert = ({ size = 16 }: P) => (
+  <svg {...base(size)}><path d="M12 3l9.5 16.5H2.5L12 3z" /><path d="M12 10v4M12 17.5h.01" /></svg>
+);

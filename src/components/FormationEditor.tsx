@@ -3,7 +3,7 @@ import { api, type Match, type ParsedDistinta, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
 import type { TKey } from '../lib/i18n';
 import { personName } from './MatchEventsPanel';
-import { IconCheck } from './Icons';
+import { IconCheck, IconAlert } from './Icons';
 
 // Staff / metadata text fields, in edit order. Keys match Match columns.
 export const META_FIELDS: { key: string; label: TKey }[] = [
@@ -174,7 +174,7 @@ export default function FormationEditor({
             </>
           )}
           {banner.warnings.map((w, i) => (
-            <p key={i} className="muted" style={{ fontSize: '0.8rem', margin: '0.2rem 0' }}>⚠ {w}</p>
+            <p key={i} className="muted inline-ico" style={{ fontSize: '0.8rem', margin: '0.2rem 0' }}><IconAlert size={14} /> {w}</p>
           ))}
         </div>
       )}

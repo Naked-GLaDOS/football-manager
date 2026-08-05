@@ -3,7 +3,7 @@ import { api, matchTitle, resolveMatchDuration, type Match, type MatchInput, typ
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import { useBackDismiss } from '../lib/backnav';
-import { IconPlus, IconTrash } from '../components/Icons';
+import { IconPlus, IconTrash, IconBall } from '../components/Icons';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
 
@@ -93,7 +93,7 @@ export default function Matches() {
                   <div className="match-meta">
                     <span className="tag tag-static">{m.matchType}</span>
                     <span className="tag tag-static">{t(m.isHome ? 'home' : 'away')}</span>
-                    {goals > 0 && <span className="row-sub">⚽ {goals}</span>}
+                    {goals > 0 && <span className="row-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><IconBall /> {goals}</span>}
                   </div>
                 </div>
                 {editable && (

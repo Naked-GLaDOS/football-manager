@@ -2,7 +2,7 @@ import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
 import NotificationBell from './NotificationBell';
-import { IconPlayers, IconStaff, IconParents, IconMatches, IconTrainings, IconAdmin, IconSettings, IconGlobe, IconLogout, IconUser } from './Icons';
+import { IconPlayers, IconStaff, IconParents, IconMatches, IconTrainings, IconAdmin, IconSettings, IconGlobe, IconLogout, IconUser, IconLock } from './Icons';
 
 export type View = 'players' | 'staff' | 'genitori' | 'matches' | 'trainings' | 'settings' | 'cms';
 
@@ -43,7 +43,7 @@ export default function Layout({
             <select className="select compact" value={s.seasonId ?? ''} aria-label={t('season')}
               onChange={(e) => s.setSeason(e.target.value)}>
               {s.seasons.map((se) => (
-                <option key={se.id} value={se.id}>{se.name}{se.editable ? '' : ' 🔒'}</option>
+                <option key={se.id} value={se.id}>{se.name}{se.editable ? '' : ` (${t('seasonEndedShort')})`}</option>
               ))}
             </select>
           )}
@@ -73,7 +73,7 @@ export default function Layout({
       </header>
 
       {showContext && !s.editable && (
-        <div className="banner-locked">🔒 {t('seasonLocked')}</div>
+        <div className="banner-locked"><IconLock size={15} /> {t('seasonLocked')}</div>
       )}
 
       <main className="content">{children}</main>

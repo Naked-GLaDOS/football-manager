@@ -215,6 +215,10 @@ function AttendanceModal({
   const setStatus = (playerId: string, status: AttendanceStatus | '') =>
     setStatuses((prev) => ({ ...prev, [playerId]: status }));
 
+  // Bulk-set every player to one status (e.g. everyone present / absent).
+  const setAll = (status: AttendanceStatus) =>
+    setStatuses(Object.fromEntries(roster.map((p) => [p.id, status])));
+
   const present = roster.filter((p) => PRESENT_STATUSES.includes(statuses[p.id] as AttendanceStatus)).length;
 
   const d = new Date(training.date);
@@ -247,6 +251,17 @@ function AttendanceModal({
           <span className="row-main" />
           <span className="tag tag-static">{t('present')}: {present}/{rosterSize}</span>
         </div>
+
+        {canEdit && roster.length > 0 && (
+          <div className="row" style={{ gap: '0.5rem', marginBottom: '0.8rem' }}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAll('PRESENT')}>
+              {t('allPresent')}
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAll('ABSENT')}>
+              {t('allAbsent')}
+            </button>
+          </div>
+        )}
 
         {roster.length === 0 ? (
           <p className="empty">{t('empty')}</p>

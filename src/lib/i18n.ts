@@ -17,6 +17,7 @@ const dict = {
     season: 'Stagione',
     language: 'Lingua',
     seasonLocked: 'Stagione conclusa — sola lettura',
+    seasonEndedShort: 'conclusa',
     noTeam: 'Nessuna squadra assegnata. Contatta l’amministratore.',
 
     players: 'Giocatori',
@@ -293,6 +294,8 @@ const dict = {
     attendance: 'Presenze',
     present: 'Presenti',
     notRecorded: 'Non registrato',
+    allPresent: 'Tutti presenti',
+    allAbsent: 'Tutti assenti',
     sessions: 'Allenamenti',
     trainingDays: 'Giorni di allenamento',
     trainingDaysHint: 'Gli allenamenti in questi giorni vengono creati automaticamente, da compilare man mano.',
@@ -321,6 +324,7 @@ const dict = {
     season: 'Season',
     language: 'Language',
     seasonLocked: 'Season ended — read only',
+    seasonEndedShort: 'ended',
     noTeam: 'No team assigned. Contact your administrator.',
 
     players: 'Players',
@@ -592,6 +596,8 @@ const dict = {
     attendance: 'Attendance',
     present: 'Present',
     notRecorded: 'Not recorded',
+    allPresent: 'All present',
+    allAbsent: 'All absent',
     sessions: 'Trainings',
     trainingDays: 'Training days',
     trainingDaysHint: 'Trainings on these days are created automatically, to fill in as they happen.',

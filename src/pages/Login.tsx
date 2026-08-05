@@ -3,7 +3,7 @@ import { startAuthentication } from '@simplewebauthn/browser';
 import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import PasskeyModal from '../components/PasskeyModal';
-import { IconKey } from '../components/Icons';
+import { IconKey, IconGlobe } from '../components/Icons';
 
 export default function Login() {
   const { t, onLogin, lang, setLang } = useSession();
@@ -33,12 +33,13 @@ export default function Login() {
 
   const handlePasskeyLogin = async () => {
     setError('');
-    if (!email) { setError(t('email')); return; }
     setLoading(true);
     try {
-      const options = await api.passkeyLoginOptions(email);
+      // Usernameless: no email — the browser prompts for a registered passkey and
+      // the credential identifies the account.
+      const options = await api.passkeyLoginOptions();
       const response = await startAuthentication({ optionsJSON: options as any });
-      const res = await api.passkeyLoginVerify(email, response);
+      const res = await api.passkeyLoginVerify(response);
       localStorage.setItem('fm_token', res.token);
       await finish();
     } catch (err: any) {
@@ -89,7 +90,7 @@ export default function Login() {
           <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: '1rem' }}
             onClick={() => setLang(lang === 'it' ? 'en' : 'it')}
             aria-label={lang === 'it' ? 'Cambia lingua' : 'Change language'}>
-            🌐 {lang === 'it' ? '🇮🇹 Italiano' : '🇬🇧 English'}
+            <IconGlobe /> {lang === 'it' ? 'Italiano' : 'English'}
           </button>
         </div>
       </main>

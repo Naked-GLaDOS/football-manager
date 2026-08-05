@@ -352,13 +352,14 @@ export const api = {
     request<{ verified: boolean }>('/auth/passkey/register/verify', {
       method: 'POST', body: body({ response }),
     }),
-  passkeyLoginOptions: (email: string) =>
+  // Email is optional: omit it for a usernameless (discoverable-credential) login.
+  passkeyLoginOptions: (email?: string) =>
     request<Record<string, unknown>>('/auth/passkey/login/options', {
-      method: 'POST', body: body({ email }),
+      method: 'POST', body: body(email ? { email } : {}),
     }),
-  passkeyLoginVerify: (email: string, response: unknown) =>
+  passkeyLoginVerify: (response: unknown) =>
     request<{ verified: boolean; token: string; passkeyOptOut: boolean; role: 'ADMIN' | 'USER'; hasPasskey: boolean }>(
-      '/auth/passkey/login/verify', { method: 'POST', body: body({ email, response }) },
+      '/auth/passkey/login/verify', { method: 'POST', body: body({ response }) },
     ),
 
   logout: () => request<{ ok: boolean }>('/auth/logout', { method: 'POST' }),

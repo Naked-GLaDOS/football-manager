@@ -5,7 +5,7 @@ import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
 import PersonFields from '../components/PersonFields';
 import PersonForm from '../components/PersonForm';
-import { IconBack, IconEdit } from '../components/Icons';
+import { IconBack, IconEdit, IconBall } from '../components/Icons';
 
 type Tab = 'registry' | 'statistics';
 
@@ -172,7 +172,7 @@ function StatsTab({ teamId, seasonId, playerId }: { teamId: string; seasonId: st
                 <div className="match-meta">
                   <span className="tag tag-static">{m.matchType}</span>
                   {m.starter && <span className="pill pill-c" title={t('titolare')}>{t('starterShort')}</span>}
-                  {m.goals > 0 && <span className="row-sub">⚽ {m.goals}</span>}
+                  {m.goals > 0 && <span className="row-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><IconBall /> {m.goals}</span>}
                   {m.yellowCards > 0 && <span className="chip-card chip-yellow" />}
                   {m.redCards > 0 && <span className="chip-card chip-red" />}
                 </div>

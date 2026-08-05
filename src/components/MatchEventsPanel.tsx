@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { api, type Match, type MatchDuration, type MatchEvent, type NewMatchEvent, type Person } from '../lib/api';
 import { useSession } from '../lib/session';
-import { IconPlus, IconTrash } from './Icons';
+import { IconPlus, IconTrash, IconBall, IconSwap, IconArrowUp, IconArrowDown } from './Icons';
 
 export const personName = (p: { firstName: string | null; lastName: string | null } | null, fallback: string) =>
   (p ? [p.lastName, p.firstName].filter(Boolean).join(' ') : '') || fallback;
@@ -95,15 +95,18 @@ export default function MatchEventsPanel({
     } catch { /* ignore */ }
   };
 
-  const eventVisual = (e: MatchEvent) => {
-    if (e.type === 'GOAL') return { icon: '⚽', cls: '' };
-    if (e.type === 'CARD') return { icon: '', cls: e.card === 'RED' ? 'card-red' : 'card-yellow' };
-    return { icon: '⇄', cls: '' };
+  const eventVisual = (e: MatchEvent): { icon: React.ReactNode; cls: string } => {
+    if (e.type === 'GOAL') return { icon: <IconBall size={15} />, cls: '' };
+    if (e.type === 'CARD') return { icon: null, cls: e.card === 'RED' ? 'card-red' : 'card-yellow' };
+    return { icon: <IconSwap size={15} />, cls: '' };
   };
 
-  const eventLines = (e: MatchEvent): { title: React.ReactNode; sub?: string } => {
+  const eventLines = (e: MatchEvent): { title: React.ReactNode; sub?: React.ReactNode } => {
     if (e.type === 'SUBSTITUTION') {
-      return { title: <>▲ {pName(e.playerIn)}</>, sub: `▼ ${pName(e.playerOut)}` };
+      return {
+        title: <span className="inline-ico"><IconArrowUp /> {pName(e.playerIn)}</span>,
+        sub: <span className="inline-ico"><IconArrowDown /> {pName(e.playerOut)}</span>,
+      };
     }
     if (e.type === 'CARD') {
       return { title: pName(e.player), sub: e.card === 'RED' ? t('red') : t('yellow') };
