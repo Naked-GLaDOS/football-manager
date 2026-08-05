@@ -50,6 +50,9 @@ export const IconSettings = ({ size = 22 }: P) => (
 export const IconClose = ({ size = 16 }: P) => (
   <svg {...base(size)}><path d="M18 6 6 18M6 6l12 12" /></svg>
 );
+export const IconTrainings = ({ size = 22 }: P) => (
+  <svg {...base(size)}><path d="M9 3.5h6l-1.2 8.5a2 2 0 0 1-4 0L9 3.5z" /><path d="M8.5 3.5h7" /><path d="M12 15v2.5" /><path d="M8 21h8l-1-2.5H9L8 21z" /></svg>
+);
 export const IconMatches = ({ size = 22 }: P) => (
   <svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M12 8l3.2 2.3-1.2 3.7h-4L8.8 10.3 12 8z" /></svg>
 );

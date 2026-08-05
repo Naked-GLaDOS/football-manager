@@ -133,6 +133,15 @@ function StatsTab({ teamId, seasonId, playerId }: { teamId: string; seasonId: st
             <div className="stat-label">{t(c.label)}</div>
           </div>
         ))}
+        <div className="stat-card">
+          <div className="stat-value">
+            {stats.training.percentage}%
+            <span className="row-sub" style={{ fontWeight: 500, fontSize: '0.7rem' }}>
+              {' '}{stats.training.present}/{stats.training.total}
+            </span>
+          </div>
+          <div className="stat-label">{t('trainingAttendance')}</div>
+        </div>
       </div>
 
       {stats.minutesByMatchType.length > 0 && (

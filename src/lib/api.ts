@@ -70,6 +70,8 @@ export interface SeasonSettings {
   maxSubstitutions: number;
   // Per-type configuration (each type carries its own default duration).
   matchTypeConfigs: MatchTypeConfig[];
+  // Scheduled weekly training days (JS getDay: 0 = Sunday … 6 = Saturday).
+  trainingDays: number[];
   editable: boolean;
 }
 
@@ -149,6 +151,7 @@ export interface Match extends MatchStaff {
   opponent: string;
   date: string;
   matchType: string;
+  isHome: boolean;
   // Per-match duration overrides (null = inherit the match type's config).
   periods: number | null;
   periodMinutes: number | null;
@@ -166,9 +169,16 @@ export interface MatchInput {
   opponent: string;
   date: string;
   matchType: string;
+  isHome?: boolean;
   periods?: number | null;
   periodMinutes?: number | null;
   maxSubstitutions?: number | null;
+}
+
+// The two teams of a fixture in display order: at home the own team is listed
+// first ("us vs them"), away it is reversed ("them vs us").
+export function matchTitle(teamName: string, opponent: string, isHome: boolean): string {
+  return isHome ? `${teamName} vs ${opponent}` : `${opponent} vs ${teamName}`;
 }
 
 // One line-up row as sent to the server when saving a formation.
@@ -209,6 +219,44 @@ export interface PlayerStats {
   subsOut: number;
   minutesByMatchType: { matchType: string; minutes: number }[];
   perMatch: PerMatchStat[];
+  // Season training attendance (present or present-but-injured / total sessions).
+  training: { total: number; present: number; percentage: number };
+}
+
+// ── Trainings ───────────────────────────────────────────────────────────────
+export type AttendanceStatus =
+  | 'PRESENT' | 'PRESENT_INJURED' | 'ABSENT_INJURY' | 'ABSENT_ILLNESS' | 'ABSENT';
+
+export const ATTENDANCE_STATUSES: AttendanceStatus[] = [
+  'PRESENT', 'PRESENT_INJURED', 'ABSENT_INJURY', 'ABSENT_ILLNESS', 'ABSENT',
+];
+
+// The statuses that count a player as physically present at a session.
+export const PRESENT_STATUSES: AttendanceStatus[] = ['PRESENT', 'PRESENT_INJURED'];
+
+export interface TrainingAttendance {
+  playerId: string;
+  status: AttendanceStatus;
+}
+
+export interface Training {
+  id: string;
+  date: string;
+  auto: boolean;
+  skipped: boolean;
+  attendances: TrainingAttendance[];
+}
+
+export interface TrainingsResponse {
+  trainings: Training[];
+  rosterSize: number;
+  editable: boolean;
+}
+
+// One player's attendance change as sent to the server (null clears the status).
+export interface AttendanceInput {
+  playerId: string;
+  status: AttendanceStatus | null;
 }
 
 // ── Parsed distinta (returned by the parse endpoint, not persisted) ─────────────
@@ -400,6 +448,18 @@ export const api = {
   // Player statistics (per season)
   playerStats: (teamId: string, seasonId: string, playerId: string) =>
     request<PlayerStats>(`/teams/${teamId}/seasons/${seasonId}/players/${playerId}/stats`),
+
+  // Trainings (per team+season)
+  trainings: (teamId: string, seasonId: string) =>
+    request<TrainingsResponse>(`/teams/${teamId}/seasons/${seasonId}/trainings`),
+  createTraining: (teamId: string, seasonId: string, date: string) =>
+    request<Training>(`/teams/${teamId}/seasons/${seasonId}/trainings`, { method: 'POST', body: body({ date }) }),
+  deleteTraining: (teamId: string, seasonId: string, id: string) =>
+    request<{ ok: boolean }>(`/teams/${teamId}/seasons/${seasonId}/trainings/${id}`, { method: 'DELETE' }),
+  saveAttendance: (teamId: string, seasonId: string, id: string, attendances: AttendanceInput[]) =>
+    request<Training>(`/teams/${teamId}/seasons/${seasonId}/trainings/${id}/attendance`, {
+      method: 'PUT', body: body({ attendances }),
+    }),
 
   // Admin / CMS
   adminTeams: () => request<AdminTeam[]>('/admin/teams'),

@@ -277,6 +277,35 @@ const dict = {
     unknownDevice: 'Dispositivo sconosciuto',
     notificationsEmpty: 'Nessuna notifica',
     markAllRead: 'Segna tutte come lette',
+
+    // match venue
+    venue: 'Luogo',
+    home: 'In casa',
+    away: 'In trasferta',
+
+    // trainings
+    trainings: 'Allenamenti',
+    newTraining: 'Nuovo allenamento',
+    addTraining: 'Aggiungi allenamento',
+    noTrainings: 'Nessun allenamento',
+    trainingDate: 'Data',
+    skipTraining: 'Salta allenamento',
+    attendance: 'Presenze',
+    present: 'Presenti',
+    notRecorded: 'Non registrato',
+    sessions: 'Allenamenti',
+    trainingDays: 'Giorni di allenamento',
+    trainingDaysHint: 'Gli allenamenti in questi giorni vengono creati automaticamente, da compilare man mano.',
+    monthlyAttendance: 'Presenze mensili',
+    countedStatuses: 'Stati conteggiati',
+    countedStatusesHint: 'Seleziona quali stati contano come presenza nel conteggio.',
+    trainingAttendance: 'Presenza agli allenamenti',
+    // attendance statuses
+    PRESENT: 'Presente',
+    PRESENT_INJURED: 'Presente ma infortunato',
+    ABSENT_INJURY: 'Assente per infortunio',
+    ABSENT_ILLNESS: 'Assente per malattia',
+    ABSENT: 'Assente',
   },
   en: {
     appName: 'Football Manager',
@@ -547,6 +576,35 @@ const dict = {
     unknownDevice: 'Unknown device',
     notificationsEmpty: 'No notifications',
     markAllRead: 'Mark all as read',
+
+    // match venue
+    venue: 'Venue',
+    home: 'Home',
+    away: 'Away',
+
+    // trainings
+    trainings: 'Trainings',
+    newTraining: 'New training',
+    addTraining: 'Add training',
+    noTrainings: 'No trainings',
+    trainingDate: 'Date',
+    skipTraining: 'Skip training',
+    attendance: 'Attendance',
+    present: 'Present',
+    notRecorded: 'Not recorded',
+    sessions: 'Trainings',
+    trainingDays: 'Training days',
+    trainingDaysHint: 'Trainings on these days are created automatically, to fill in as they happen.',
+    monthlyAttendance: 'Monthly attendance',
+    countedStatuses: 'Counted statuses',
+    countedStatusesHint: 'Choose which statuses count as attendance in the tally.',
+    trainingAttendance: 'Training attendance',
+    // attendance statuses
+    PRESENT: 'Present',
+    PRESENT_INJURED: 'Present but injured',
+    ABSENT_INJURY: 'Absent (injury)',
+    ABSENT_ILLNESS: 'Absent (illness)',
+    ABSENT: 'Absent',
   },
 } as const;
 

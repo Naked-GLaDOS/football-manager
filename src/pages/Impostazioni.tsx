@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, MATCH_DURATION_DEFAULT, type MatchTypeConfig } from '../lib/api';
 import { useSession } from '../lib/session';
-import { ABSENCE_REASONS, type TKey } from '../lib/i18n';
+import { ABSENCE_REASONS, type Lang, type TKey } from '../lib/i18n';
 import { IconPlus, IconClose, IconCheck } from '../components/Icons';
 
 const clampInt = (v: string, min: number, max: number, fallback: number) => {
@@ -10,11 +10,17 @@ const clampInt = (v: string, min: number, max: number, fallback: number) => {
   return Math.min(max, Math.max(min, n));
 };
 
+// Weekdays in JS getDay() convention (0 = Sunday), displayed Monday-first.
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+// 2023-01-01 (UTC) is a Sunday, so +dow lands on the wanted weekday.
+const weekdayLabel = (dow: number, lang: Lang) =>
+  new Date(Date.UTC(2023, 0, 1 + dow)).toLocaleDateString(lang, { weekday: 'short', timeZone: 'UTC' });
+
 // Bounds for the per-type duration fields (mirrors the backend validation).
 const P = { periods: [1, 20], periodMinutes: [1, 240], maxSubstitutions: [0, 30] } as const;
 
 export default function Impostazioni() {
-  const { t, teamId, seasonId, editable } = useSession();
+  const { t, lang, teamId, seasonId, editable } = useSession();
 
   const [loading, setLoading] = useState(true);
   const [srvEditable, setSrvEditable] = useState(true);
@@ -22,6 +28,7 @@ export default function Impostazioni() {
   // new types seed from the last existing type, falling back to these.
   const [defaults, setDefaults] = useState(MATCH_DURATION_DEFAULT);
   const [configs, setConfigs] = useState<MatchTypeConfig[]>([]);
+  const [trainingDays, setTrainingDays] = useState<number[]>([]);
   const [newType, setNewType] = useState('');
 
   const [saving, setSaving] = useState(false);
@@ -35,6 +42,7 @@ export default function Impostazioni() {
       const s = await api.settings(teamId, seasonId);
       setDefaults({ periods: s.periods, periodMinutes: s.periodMinutes, maxSubstitutions: s.maxSubstitutions });
       setConfigs(s.matchTypeConfigs);
+      setTrainingDays(s.trainingDays);
       setSrvEditable(s.editable);
     } finally {
       setLoading(false);
@@ -59,6 +67,9 @@ export default function Impostazioni() {
   };
   const removeType = (i: number) => setConfigs((prev) => prev.filter((_, idx) => idx !== i));
 
+  const toggleTrainingDay = (dow: number) =>
+    setTrainingDays((prev) => (prev.includes(dow) ? prev.filter((d) => d !== dow) : [...prev, dow]));
+
   const setField = (i: number, key: keyof Omit<MatchTypeConfig, 'name'>, value: number) =>
     setConfigs((prev) => prev.map((c, idx) => (idx === i ? { ...c, [key]: value } : c)));
 
@@ -71,9 +82,11 @@ export default function Impostazioni() {
         periodMinutes: defaults.periodMinutes,
         maxSubstitutions: defaults.maxSubstitutions,
         matchTypeConfigs: configs,
+        trainingDays,
       });
       setDefaults({ periods: res.periods, periodMinutes: res.periodMinutes, maxSubstitutions: res.maxSubstitutions });
       setConfigs(res.matchTypeConfigs);
+      setTrainingDays(res.trainingDays);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 1600);
     } catch (err: any) {
@@ -132,6 +145,25 @@ export default function Impostazioni() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Training days — auto-generate scheduled trainings on these weekdays */}
+      <div className="card" style={{ marginBottom: '0.9rem' }}>
+        <h3 className="settings-heading">{t('trainingDays')}</h3>
+        <p className="muted" style={{ fontSize: '0.82rem', margin: '0 0 0.9rem' }}>{t('trainingDaysHint')}</p>
+        <div className="chip-list">
+          {WEEKDAY_ORDER.map((dow) => {
+            const on = trainingDays.includes(dow);
+            return (
+              <button key={dow} type="button" disabled={!canEdit}
+                className={`chip${on ? ' on' : ''}`}
+                style={{ textTransform: 'capitalize' }}
+                onClick={() => toggleTrainingDay(dow)}>
+                {weekdayLabel(dow, lang)}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Absence reasons (fixed reference list, used for minutes tracking) */}

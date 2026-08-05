@@ -2,15 +2,16 @@ import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
 import NotificationBell from './NotificationBell';
-import { IconPlayers, IconStaff, IconParents, IconMatches, IconAdmin, IconSettings, IconGlobe, IconLogout, IconUser } from './Icons';
+import { IconPlayers, IconStaff, IconParents, IconMatches, IconTrainings, IconAdmin, IconSettings, IconGlobe, IconLogout, IconUser } from './Icons';
 
-export type View = 'players' | 'staff' | 'genitori' | 'matches' | 'settings' | 'cms';
+export type View = 'players' | 'staff' | 'genitori' | 'matches' | 'trainings' | 'settings' | 'cms';
 
 const NAV: { view: View; key: TKey; Icon: React.FC<{ size?: number }>; adminOnly?: boolean }[] = [
   { view: 'players', key: 'players', Icon: IconPlayers },
   { view: 'staff', key: 'staff', Icon: IconStaff },
   { view: 'genitori', key: 'parents', Icon: IconParents },
   { view: 'matches', key: 'matches', Icon: IconMatches },
+  { view: 'trainings', key: 'trainings', Icon: IconTrainings },
   { view: 'settings', key: 'settings', Icon: IconSettings },
   { view: 'cms', key: 'cms', Icon: IconAdmin, adminOnly: true },
 ];

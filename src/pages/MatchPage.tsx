@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, resolveMatchDuration, type Match, type MatchInput, type Person, type SeasonSettings } from '../lib/api';
+import { api, matchTitle, resolveMatchDuration, type Match, type MatchInput, type Person, type SeasonSettings } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
@@ -83,10 +83,11 @@ export default function MatchPage({ matchId }: { matchId: string }) {
           <IconBack />
         </button>
         <div className="row-main">
-          <h2 className="title" style={{ margin: 0 }}>{teamName} vs {match.opponent}</h2>
+          <h2 className="title" style={{ margin: 0 }}>{matchTitle(teamName, match.opponent, match.isHome)}</h2>
           <div className="match-meta">
             <span className="muted" style={{ fontSize: '0.82rem' }}>{dateLabel}</span>
             <span className="tag tag-static">{match.matchType}</span>
+            <span className="tag tag-static">{t(match.isHome ? 'home' : 'away')}</span>
             <span className="tag tag-static">{duration.periods}×{duration.periodMinutes}′</span>
           </div>
         </div>

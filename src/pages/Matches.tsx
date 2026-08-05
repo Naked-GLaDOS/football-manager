@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, resolveMatchDuration, type Match, type MatchInput, type MatchTypeConfig, type SeasonSettings } from '../lib/api';
+import { api, matchTitle, resolveMatchDuration, type Match, type MatchInput, type MatchTypeConfig, type SeasonSettings } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import { useBackDismiss } from '../lib/backnav';
@@ -89,9 +89,10 @@ export default function Matches() {
                   <div className="m">{isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { month: 'short' })}</div>
                 </div>
                 <div className="row-main">
-                  <div className="row-title">{teamName} vs {m.opponent}</div>
+                  <div className="row-title">{matchTitle(teamName, m.opponent, m.isHome)}</div>
                   <div className="match-meta">
                     <span className="tag tag-static">{m.matchType}</span>
+                    <span className="tag tag-static">{t(m.isHome ? 'home' : 'away')}</span>
                     {goals > 0 && <span className="row-sub">⚽ {goals}</span>}
                   </div>
                 </div>
@@ -140,6 +141,7 @@ export function MatchForm({
   const [opponent, setOpponent] = useState(initial?.opponent ?? '');
   const [date, setDate] = useState(initial ? initial.date.slice(0, 10) : todayInput());
   const [matchType, setMatchType] = useState(initial?.matchType ?? typeNames[0] ?? '');
+  const [isHome, setIsHome] = useState(initial?.isHome ?? true);
 
   // Per-match duration. Seeded from the existing match's effective values when
   // editing, else from the first type's config. Changing the type resets these
@@ -180,7 +182,7 @@ export function MatchForm({
     setSaving(true); setError('');
     try {
       await onSave({
-        opponent: opponent.trim(), date, matchType,
+        opponent: opponent.trim(), date, matchType, isHome,
         periods: clampInt(periods, 1, 20, seed.periods),
         periodMinutes: clampInt(periodMinutes, 1, 240, seed.periodMinutes),
         maxSubstitutions: clampInt(maxSubs, 0, 30, seed.maxSubstitutions),
@@ -213,6 +215,17 @@ export function MatchForm({
               {typeOptions.length === 0 && <option value="">—</option>}
               {typeOptions.map((mt) => <option key={mt} value={mt}>{mt}</option>)}
             </select>
+          </div>
+          <div className="field">
+            <label>{t('venue')}</label>
+            <div className="segmented">
+              <button type="button" className={isHome ? 'active' : ''} onClick={() => setIsHome(true)}>
+                {t('home')}
+              </button>
+              <button type="button" className={!isHome ? 'active' : ''} onClick={() => setIsHome(false)}>
+                {t('away')}
+              </button>
+            </div>
           </div>
         </div>
 
