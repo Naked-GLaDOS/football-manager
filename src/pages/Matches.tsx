@@ -7,6 +7,16 @@ import { IconPlus, IconTrash, IconBall } from '../components/Icons';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
 
+// Local start-of-today in ms. Matches are grouped relative to this: a fixture is
+// "past" only once its day is fully over (so today's match stays under Upcoming).
+const startOfTodayMs = () => {
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
+};
+// A past match still needs data when no events (goals/subs/cards) were recorded —
+// same notion the backend uses for the MATCH_DATA_REMINDER push.
+const matchHasData = (m: Match) => m.events.length > 0;
+
 export default function Matches() {
   const s = useSession();
   const { t, teamId, seasonId, editable, me } = s;
@@ -60,6 +70,56 @@ export default function Matches() {
     setMatches((prev) => prev.filter((x) => x.id !== m.id));
   };
 
+  // Split into three date-ordered buckets:
+  //  • toComplete — past matches still missing data (kept up top as a nudge).
+  //  • upcoming   — today's & future fixtures, soonest first.
+  //  • past       — finished matches that have data, most recent first.
+  const { toComplete, upcoming, past } = useMemo(() => {
+    const today = startOfTodayMs();
+    const toComplete: Match[] = [], upcoming: Match[] = [], past: Match[] = [];
+    for (const m of matches) {
+      const time = new Date(m.date).getTime();
+      const isPast = !isNaN(time) && time < today;
+      if (isPast && !matchHasData(m)) toComplete.push(m);
+      else if (isPast) past.push(m);
+      else upcoming.push(m); // future, today, or unparseable dates
+    }
+    const asc = (a: Match, b: Match) => +new Date(a.date) - +new Date(b.date);
+    upcoming.sort(asc);
+    past.sort((a, b) => -asc(a, b));
+    toComplete.sort((a, b) => -asc(a, b));
+    return { toComplete, upcoming, past };
+  }, [matches]);
+
+  const renderMatch = (m: Match) => {
+    const d = new Date(m.date);
+    const goals = m.events.filter((e) => e.type === 'GOAL').length;
+    const needsData = !isNaN(d.getTime()) && d.getTime() < startOfTodayMs() && !matchHasData(m);
+    return (
+      <div key={m.id} className="card interactive match-card" onClick={() => nav.open({ type: 'match', id: m.id })}>
+        <div className="match-date">
+          <div className="d">{isNaN(d.getTime()) ? '–' : d.getDate()}</div>
+          <div className="m">{isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { month: 'short' })}</div>
+        </div>
+        <div className="row-main">
+          <div className="row-title">{matchTitle(teamName, m.opponent, m.isHome)}</div>
+          <div className="match-meta">
+            <span className="tag tag-static">{m.matchType}</span>
+            <span className="tag tag-static">{t(m.isHome ? 'home' : 'away')}</span>
+            {goals > 0 && <span className="row-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><IconBall /> {goals}</span>}
+            {needsData && <span className="tag tag-warning">{t('missingData')}</span>}
+          </div>
+        </div>
+        {editable && (
+          <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')}
+            onClick={(e) => { e.stopPropagation(); removeMatch(m); }}>
+            <IconTrash />
+          </button>
+        )}
+      </div>
+    );
+  };
+
   if (!teamId) return <p className="empty">{t('noTeam')}</p>;
 
   return (
@@ -78,34 +138,26 @@ export default function Matches() {
       ) : matches.length === 0 ? (
         <p className="empty">{t('noMatches')}</p>
       ) : (
-        <div className="timeline">
-          {matches.map((m) => {
-            const d = new Date(m.date);
-            const goals = m.events.filter((e) => e.type === 'GOAL').length;
-            return (
-              <div key={m.id} className="card interactive match-card" onClick={() => nav.open({ type: 'match', id: m.id })}>
-                <div className="match-date">
-                  <div className="d">{isNaN(d.getTime()) ? '–' : d.getDate()}</div>
-                  <div className="m">{isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { month: 'short' })}</div>
-                </div>
-                <div className="row-main">
-                  <div className="row-title">{matchTitle(teamName, m.opponent, m.isHome)}</div>
-                  <div className="match-meta">
-                    <span className="tag tag-static">{m.matchType}</span>
-                    <span className="tag tag-static">{t(m.isHome ? 'home' : 'away')}</span>
-                    {goals > 0 && <span className="row-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><IconBall /> {goals}</span>}
-                  </div>
-                </div>
-                {editable && (
-                  <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')}
-                    onClick={(e) => { e.stopPropagation(); removeMatch(m); }}>
-                    <IconTrash />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <>
+          {toComplete.length > 0 && (
+            <section className="timeline-group">
+              <h3 className="settings-heading warning-heading">{t('toComplete')}</h3>
+              <div className="timeline">{toComplete.map(renderMatch)}</div>
+            </section>
+          )}
+          {upcoming.length > 0 && (
+            <section className="timeline-group">
+              <h3 className="settings-heading">{t('upcoming')}</h3>
+              <div className="timeline">{upcoming.map(renderMatch)}</div>
+            </section>
+          )}
+          {past.length > 0 && (
+            <section className="timeline-group">
+              <h3 className="settings-heading">{t('matchesPast')}</h3>
+              <div className="timeline">{past.map(renderMatch)}</div>
+            </section>
+          )}
+        </>
       )}
 
       {editing !== null && settings && (

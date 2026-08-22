@@ -299,6 +299,7 @@ export interface AccountProfile {
   lang: 'it' | 'en';
   notifyFormationReminder: boolean;
   notifyMatchDataReminder: boolean;
+  notifyTrainingDataReminder: boolean;
   createdAt: string;
   teams: Team[];
 }
@@ -312,7 +313,7 @@ export interface AccountSession {
   lastSeenAt: string; createdAt: string; current: boolean;
 }
 
-export type NotificationType = 'FORMATION_REMINDER' | 'MATCH_DATA_REMINDER' | 'TEST';
+export type NotificationType = 'FORMATION_REMINDER' | 'MATCH_DATA_REMINDER' | 'TRAINING_DATA_REMINDER' | 'TEST';
 
 export interface AppNotification {
   id: string;
@@ -371,7 +372,7 @@ export const api = {
   // Account
   account: () => request<AccountProfile>('/account'),
   updateAccount: (data: Partial<Pick<AccountProfile,
-    'name' | 'email' | 'theme' | 'lang' | 'notifyFormationReminder' | 'notifyMatchDataReminder'>>) =>
+    'name' | 'email' | 'theme' | 'lang' | 'notifyFormationReminder' | 'notifyMatchDataReminder' | 'notifyTrainingDataReminder'>>) =>
     request<AccountProfile>('/account', { method: 'PATCH', body: body(data) }),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ ok: boolean }>('/account/password', { method: 'POST', body: body({ currentPassword, newPassword }) }),

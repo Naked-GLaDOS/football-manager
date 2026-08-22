@@ -17,6 +17,11 @@ const todayUtcMs = () => {
   return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
 };
 const isFuture = (tr: Training) => new Date(tr.date).getTime() > todayUtcMs();
+// A session is "past" once its day is fully over; today's session stays under
+// Upcoming (attendance is usually recorded on the day itself).
+const isPast = (tr: Training) => new Date(tr.date).getTime() < todayUtcMs();
+// A past session still needs data when no attendance was ever recorded.
+const trainingHasData = (tr: Training) => tr.attendances.length > 0;
 
 // Person's display name (surname first), or "unknown".
 const nameOf = (p: Person, fallback: string) =>
@@ -65,6 +70,24 @@ export default function Trainings() {
   const pastActive = useMemo(() => active.filter((tr) => !isFuture(tr)), [active]);
   const hasFuture = useMemo(() => trainings.some((tr) => !tr.skipped && isFuture(tr)), [trainings]);
 
+  // Three date-ordered buckets, mirroring the matches page:
+  //  • toComplete — past sessions still missing attendance (nudge, kept up top).
+  //  • upcoming   — today's & future sessions, soonest first.
+  //  • past       — recorded sessions, most recent first.
+  const { toComplete, upcoming, past } = useMemo(() => {
+    const toComplete: Training[] = [], upcoming: Training[] = [], past: Training[] = [];
+    for (const tr of active) {
+      if (isPast(tr) && !trainingHasData(tr)) toComplete.push(tr);
+      else if (isPast(tr)) past.push(tr);
+      else upcoming.push(tr);
+    }
+    const asc = (a: Training, b: Training) => +new Date(a.date) - +new Date(b.date);
+    upcoming.sort(asc);
+    past.sort((a, b) => -asc(a, b));
+    toComplete.sort((a, b) => -asc(a, b));
+    return { toComplete, upcoming, past };
+  }, [active]);
+
   const addTraining = async (date: string) => {
     if (!teamId || !seasonId) return;
     const created = await api.createTraining(teamId, seasonId, date);
@@ -92,6 +115,34 @@ export default function Trainings() {
   const onSaved = (updated: Training) => {
     setTrainings((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
     setEditing(null);
+  };
+
+  const renderTraining = (tr: Training) => {
+    const d = new Date(tr.date);
+    const needsData = isPast(tr) && !trainingHasData(tr);
+    return (
+      <div key={tr.id} className="card interactive match-card" onClick={() => setEditing(tr)}>
+        <div className="match-date">
+          <div className="d">{isNaN(d.getTime()) ? '–' : d.getUTCDate()}</div>
+          <div className="m">{isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { month: 'short', timeZone: 'UTC' })}</div>
+        </div>
+        <div className="row-main">
+          <div className="row-title" style={{ textTransform: 'capitalize' }}>
+            {isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { weekday: 'long', timeZone: 'UTC' })}
+          </div>
+          <div className="match-meta">
+            <span className="tag tag-static">{t('present')}: {presentCount(tr)}/{rosterSize}</span>
+            {needsData && <span className="tag tag-warning">{t('missingAttendance')}</span>}
+          </div>
+        </div>
+        {editable && (
+          <button className="btn btn-ghost btn-sm btn-icon" title={t('skipTraining')}
+            onClick={(e) => { e.stopPropagation(); removeTraining(tr); }}>
+            <IconTrash />
+          </button>
+        )}
+      </div>
+    );
   };
 
   if (!teamId) return <p className="empty">{t('noTeam')}</p>;
@@ -130,33 +181,24 @@ export default function Trainings() {
             <IconTrash /> {t('deleteFutureTrainings')}
           </button>
         )}
-        <div className="timeline">
-          {active.map((tr) => {
-            const d = new Date(tr.date);
-            return (
-              <div key={tr.id} className="card interactive match-card" onClick={() => setEditing(tr)}>
-                <div className="match-date">
-                  <div className="d">{isNaN(d.getTime()) ? '–' : d.getUTCDate()}</div>
-                  <div className="m">{isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { month: 'short', timeZone: 'UTC' })}</div>
-                </div>
-                <div className="row-main">
-                  <div className="row-title" style={{ textTransform: 'capitalize' }}>
-                    {isNaN(d.getTime()) ? '' : d.toLocaleDateString(s.lang, { weekday: 'long', timeZone: 'UTC' })}
-                  </div>
-                  <div className="match-meta">
-                    <span className="tag tag-static">{t('present')}: {presentCount(tr)}/{rosterSize}</span>
-                  </div>
-                </div>
-                {editable && (
-                  <button className="btn btn-ghost btn-sm btn-icon" title={t('skipTraining')}
-                    onClick={(e) => { e.stopPropagation(); removeTraining(tr); }}>
-                    <IconTrash />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {toComplete.length > 0 && (
+          <section className="timeline-group">
+            <h3 className="settings-heading warning-heading">{t('toComplete')}</h3>
+            <div className="timeline">{toComplete.map(renderTraining)}</div>
+          </section>
+        )}
+        {upcoming.length > 0 && (
+          <section className="timeline-group">
+            <h3 className="settings-heading">{t('upcoming')}</h3>
+            <div className="timeline">{upcoming.map(renderTraining)}</div>
+          </section>
+        )}
+        {past.length > 0 && (
+          <section className="timeline-group">
+            <h3 className="settings-heading">{t('trainingsPast')}</h3>
+            <div className="timeline">{past.map(renderTraining)}</div>
+          </section>
+        )}
         </>
       )}
 

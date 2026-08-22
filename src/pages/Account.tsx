@@ -325,7 +325,7 @@ function NotificationsCard({ profile, onChange }: { profile: AccountProfile; onC
     }
   };
 
-  const setPref = async (key: 'notifyFormationReminder' | 'notifyMatchDataReminder', v: boolean) => {
+  const setPref = async (key: 'notifyFormationReminder' | 'notifyMatchDataReminder' | 'notifyTrainingDataReminder', v: boolean) => {
     onChange({ ...profile, [key]: v });
     await api.updateAccount({ [key]: v }).catch(() => {});
   };
@@ -365,6 +365,14 @@ function NotificationsCard({ profile, onChange }: { profile: AccountProfile; onC
           <div className="setting-hint">{t('matchDataReminderHint')}</div>
         </div>
         <Toggle checked={profile.notifyMatchDataReminder} onChange={(v) => setPref('notifyMatchDataReminder', v)} />
+      </div>
+
+      <div className="setting-row">
+        <div className="setting-main">
+          <div className="setting-label">{t('trainingDataReminder')}</div>
+          <div className="setting-hint">{t('trainingDataReminderHint')}</div>
+        </div>
+        <Toggle checked={profile.notifyTrainingDataReminder} onChange={(v) => setPref('notifyTrainingDataReminder', v)} />
       </div>
 
       <button className="btn btn-ghost" onClick={sendTest} style={{ marginTop: '0.9rem' }}>

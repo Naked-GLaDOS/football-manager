@@ -12,6 +12,10 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       registerType: 'autoUpdate',
+      // We register the service worker and poll for updates ourselves in
+      // main.tsx (avoids pulling in workbox-window), so don't also auto-inject a
+      // registration script — that would double-register the worker.
+      injectRegister: false,
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
       },
