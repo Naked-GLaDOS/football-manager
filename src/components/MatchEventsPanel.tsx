@@ -62,7 +62,7 @@ export default function MatchEventsPanel({
 
   const canAdd =
     kind === 'SUBSTITUTION'
-      ? !!playerInId && !!playerOutId && playerInId !== playerOutId && optMinute != null && optPeriod != null && !subsFull
+      ? !!playerInId && !!playerOutId && playerInId !== playerOutId && optMinute != null && optMinute >= 1 && optPeriod != null && !subsFull
       : !!playerId;
 
   const addEvent = async () => {
@@ -207,7 +207,7 @@ export default function MatchEventsPanel({
             </div>
             <div className="field">
               <label>{t('minute')}{kind !== 'SUBSTITUTION' ? ` (${t('optional')})` : ''}</label>
-              <input className="input" type="number" min={0} max={240} inputMode="numeric"
+              <input className="input" type="number" min={1} max={240} inputMode="numeric"
                 value={minute} onChange={(e) => setMinute(e.target.value)} placeholder="'" />
             </div>
           </div>
