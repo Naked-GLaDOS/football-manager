@@ -236,6 +236,12 @@ const dict = {
     addOpponentPlayer: 'Aggiungi giocatore',
     saveOpponentLineup: 'Salva distinta avversario',
     opponentName: 'Nome',
+    importCampi: 'Importa campi da PDF',
+    importCampiHint: 'Carica il PDF dei campi e indica la pagina del tuo girone: i campi degli avversari vengono compilati automaticamente in base al nome.',
+    gironePage: 'Pagina del girone',
+    runImport: 'Importa',
+    importFilled: 'Compilati',
+    importNotFound: 'Non trovati',
 
     // bulk copy / export
     copyData: 'Copia dati',
@@ -568,6 +574,12 @@ const dict = {
     addOpponentPlayer: 'Add player',
     saveOpponentLineup: 'Save opponent line-up',
     opponentName: 'Name',
+    importCampi: 'Import venues from PDF',
+    importCampiHint: 'Upload the venues PDF and enter your girone page — opponents’ venues are filled automatically by name.',
+    gironePage: 'Girone page',
+    runImport: 'Import',
+    importFilled: 'Filled',
+    importNotFound: 'Not found',
 
     // bulk copy / export
     copyData: 'Copy data',

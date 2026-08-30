@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, type OpponentGroup, type OpponentMatch, matchTitle, type OpponentVenue } from '../lib/api';
+import { api, type CampiImportResult, type OpponentGroup, type OpponentMatch, matchTitle, type OpponentVenue } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import type { Lang } from '../lib/i18n';
-import { IconShirt, IconCheck, IconEdit } from '../components/Icons';
+import { IconShirt, IconCheck, IconEdit, IconUpload } from '../components/Icons';
 
 // 2023-01-01 (UTC) is a Sunday, so +dow lands on the wanted weekday (JS getDay).
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -28,14 +28,83 @@ export default function Avversari() {
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <p className="empty">{t('loading')}</p>;
-  if (groups.length === 0) return <p className="empty">{t('noOpponents')}</p>;
 
   return (
     <div className="stack" style={{ gap: '1rem' }}>
-      {groups.map((g) => (
-        <OpponentCard key={g.name} group={g} canEdit={s.editable} lang={s.lang}
-          teamId={teamId!} seasonId={seasonId!} onSaved={load} />
-      ))}
+      {s.editable && teamId && seasonId && (
+        <ImportCampi teamId={teamId} seasonId={seasonId} onDone={load} />
+      )}
+      {groups.length === 0 ? (
+        <p className="empty">{t('noOpponents')}</p>
+      ) : (
+        groups.map((g) => (
+          <OpponentCard key={g.name} group={g} canEdit={s.editable} lang={s.lang}
+            teamId={teamId!} seasonId={seasonId!} onSaved={load} />
+        ))
+      )}
+    </div>
+  );
+}
+
+// Fill opponent venues in bulk from a league "campi" PDF (one page = your girone).
+function ImportCampi({ teamId, seasonId, onDone }: { teamId: string; seasonId: string; onDone: () => void }) {
+  const { t } = useSession();
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [page, setPage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<CampiImportResult | null>(null);
+
+  const run = async () => {
+    if (!file || page.trim() === '') return;
+    setBusy(true); setError(''); setResult(null);
+    try {
+      const res = await api.importCampi(teamId, seasonId, file, parseInt(page, 10));
+      setResult(res);
+      onDone();
+    } catch (err: any) {
+      setError(err.message || 'Error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>
+        <IconUpload /> {t('importCampi')}
+      </button>
+    );
+  }
+
+  return (
+    <div className="card">
+      <p className="muted" style={{ fontSize: '0.82rem', margin: '0 0 0.7rem' }}>{t('importCampiHint')}</p>
+      <div className="grid-fields">
+        <div className="field">
+          <label>{t('importCampi')}</label>
+          <input type="file" accept="application/pdf,.pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        </div>
+        <div className="field">
+          <label>{t('gironePage')}</label>
+          <input className="input" type="number" min={1} inputMode="numeric" value={page}
+            onChange={(e) => setPage(e.target.value)} />
+        </div>
+      </div>
+      {error && <p className="error" style={{ marginTop: '0.6rem' }}>{error}</p>}
+      {result && (
+        <p className="muted" style={{ fontSize: '0.82rem', marginTop: '0.6rem' }}>
+          {t('importFilled')}: {result.filled.length}
+          {result.unmatched.length > 0 && <> · {t('importNotFound')}: {result.unmatched.join(', ')}</>}
+        </p>
+      )}
+      <div className="modal-actions">
+        <button className="btn btn-ghost" onClick={() => setOpen(false)}>{t('cancel')}</button>
+        <button className="btn btn-primary" disabled={busy || !file || page.trim() === ''} onClick={run}>
+          {busy ? t('loading') : <><IconUpload /> {t('runImport')}</>}
+        </button>
+      </div>
     </div>
   );
 }
