@@ -1,3 +1,5 @@
+import type { TKey } from './i18n';
+
 const BASE = '/api';
 
 export type Kind = 'players' | 'staff';
@@ -161,6 +163,7 @@ export interface Match extends MatchStaff {
   events: MatchEvent[];
   lineup: LineupEntry[];
   opponentLineup: OpponentLineupEntry[];
+  absences: MatchAbsence[];
   createdAt: string;
   updatedAt: string;
 }
@@ -204,6 +207,37 @@ export interface LineupInput {
   captain: boolean;
   viceCaptain: boolean;
 }
+
+// Reason a rostered player did not take part in a match (for players not in the
+// line-up). Keys mirror the MatchAbsenceReason enum; labels are localised.
+export type MatchAbsenceReason =
+  | 'NOT_PLAYED' | 'NOT_ELIGIBLE' | 'NOT_CALLED' | 'INJURED'
+  | 'CALLED_THEN_ABSENT' | 'DISCIPLINARY' | 'CALLED_UP_OLDER' | 'ILL';
+
+export const MATCH_ABSENCE_REASONS: MatchAbsenceReason[] = [
+  'NOT_PLAYED', 'NOT_ELIGIBLE', 'NOT_CALLED', 'INJURED',
+  'CALLED_THEN_ABSENT', 'DISCIPLINARY', 'CALLED_UP_OLDER', 'ILL',
+];
+
+export const ABSENCE_REASON_LABEL: Record<MatchAbsenceReason, TKey> = {
+  NOT_PLAYED: 'absNotPlayed',
+  NOT_ELIGIBLE: 'absNotEligible',
+  NOT_CALLED: 'absNotCalled',
+  INJURED: 'absInjured',
+  CALLED_THEN_ABSENT: 'absCalledThenAbsent',
+  DISCIPLINARY: 'absDisciplinary',
+  CALLED_UP_OLDER: 'absCalledUpOlder',
+  ILL: 'absIll',
+};
+
+export interface MatchAbsence {
+  id: string;
+  reason: MatchAbsenceReason;
+  player: { id: string; firstName: string | null; lastName: string | null; role: string | null } | null;
+}
+
+// One absence row as sent to the server when saving a formation.
+export interface AbsenceInput { playerId: string; reason: MatchAbsenceReason; }
 
 // ── Player statistics ──────────────────────────────────────────────────────────
 export interface PerMatchStat {
@@ -520,7 +554,7 @@ export const api = {
   // Formation / line-up (starting XI + bench + match-sheet staff)
   saveFormation: (
     teamId: string, seasonId: string, matchId: string,
-    data: { lineup: LineupInput[]; staff?: Partial<MatchStaff> },
+    data: { lineup: LineupInput[]; staff?: Partial<MatchStaff>; absences?: AbsenceInput[] },
   ) =>
     request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/formation`, { method: 'PUT', body: body(data) }),
   // Upload a distinta PDF; returns parsed data for review (does not persist).

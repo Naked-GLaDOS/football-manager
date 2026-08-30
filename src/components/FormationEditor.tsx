@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
-import { api, type Match, type ParsedDistinta, type Person } from '../lib/api';
+import {
+  api, ABSENCE_REASON_LABEL, MATCH_ABSENCE_REASONS,
+  type Match, type MatchAbsenceReason, type ParsedDistinta, type Person,
+} from '../lib/api';
 import { useSession } from '../lib/session';
 import type { TKey } from '../lib/i18n';
 import { personName } from './MatchEventsPanel';
@@ -29,6 +32,8 @@ export interface EditorInit {
   captainId: string | null;
   viceId: string | null;
   staff: Record<string, string>;
+  // playerId → absence reason, for roster players not in the line-up.
+  absences: Record<string, MatchAbsenceReason>;
 }
 
 // Seed the editor from a match's saved line-up.
@@ -44,7 +49,9 @@ export function initFromMatch(match: Match): EditorInit {
   }
   const staff: Record<string, string> = {};
   for (const k of ALL_STAFF_KEYS) staff[k] = (match as any)[k] ?? '';
-  return { entries, captainId, viceId, staff };
+  const absences: Record<string, MatchAbsenceReason> = {};
+  for (const a of match.absences) if (a.player) absences[a.player.id] = a.reason;
+  return { entries, captainId, viceId, staff, absences };
 }
 
 // Seed the editor from a parsed distinta (only roster-matched rows are pre-selected).
@@ -65,7 +72,7 @@ export function initFromDistinta(parsed: ParsedDistinta): {
   const unmatched = parsed.players
     .filter((p) => p.rawName && !p.matchedPlayerId)
     .map((p) => `${p.rawName}${p.shirtNumber != null ? ` (${p.shirtNumber})` : ''}`);
-  return { init: { entries, captainId, viceId, staff }, warnings: parsed.warnings, unmatched };
+  return { init: { entries, captainId, viceId, staff, absences: {} }, warnings: parsed.warnings, unmatched };
 }
 
 export default function FormationEditor({
@@ -85,6 +92,7 @@ export default function FormationEditor({
   const [captainId, setCaptainId] = useState<string | null>(init.captainId);
   const [viceId, setViceId] = useState<string | null>(init.viceId);
   const [staff, setStaff] = useState<Record<string, string>>(init.staff);
+  const [absences, setAbsences] = useState<Record<string, MatchAbsenceReason>>(init.absences);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -128,10 +136,23 @@ export default function FormationEditor({
     });
     if (captainId === id) setCaptainId(null);
     if (viceId === id) setViceId(null);
+    // A player in the line-up can't also be marked absent.
+    setAbsences((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev }; delete next[id]; return next;
+    });
   };
 
   const setEntry = (id: string, patch: Partial<EntryState>) =>
     setEntries((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+
+  const setAbsence = (id: string, reason: string) =>
+    setAbsences((prev) => {
+      const next = { ...prev };
+      if (reason === '') delete next[id];
+      else next[id] = reason as MatchAbsenceReason;
+      return next;
+    });
 
   const pickCaptain = (id: string) => {
     setCaptainId((c) => (c === id ? null : id));
@@ -153,8 +174,12 @@ export default function FormationEditor({
     }));
     const staffPayload: Record<string, string> = {};
     for (const k of ALL_STAFF_KEYS) staffPayload[k] = staff[k]?.trim() ?? '';
+    // Absences only for players not in the line-up.
+    const absencePayload = Object.entries(absences)
+      .filter(([id]) => !entries[id])
+      .map(([playerId, reason]) => ({ playerId, reason }));
     try {
-      const updated = await api.saveFormation(teamId, seasonId, match.id, { lineup, staff: staffPayload as any });
+      const updated = await api.saveFormation(teamId, seasonId, match.id, { lineup, staff: staffPayload as any, absences: absencePayload });
       onDone(updated);
     } catch (err: any) {
       setError(err.message || 'Error'); setSaving(false);
@@ -221,6 +246,15 @@ export default function FormationEditor({
                   <button type="button" className={`pill-btn${viceId === p.id ? ' pill-v' : ''}`}
                     title={t('viceCaptain')} onClick={() => pickVice(p.id)}>{t('viceCaptainShort')}</button>
                 </div>
+              )}
+              {!included && (
+                <select className="select" style={{ width: 'auto', maxWidth: 230 }}
+                  value={absences[p.id] ?? ''} onChange={(ev) => setAbsence(p.id, ev.target.value)}>
+                  <option value="">{t('absenceReason')}</option>
+                  {MATCH_ABSENCE_REASONS.map((r) => (
+                    <option key={r} value={r}>{t(ABSENCE_REASON_LABEL[r])}</option>
+                  ))}
+                </select>
               )}
             </div>
           );

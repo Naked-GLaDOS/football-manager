@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, matchTitle, resolveMatchDuration, type Match, type MatchInput, type OpponentLineupEntry, type Person, type SeasonSettings } from '../lib/api';
+import { api, ABSENCE_REASON_LABEL, matchTitle, resolveMatchDuration, type Match, type MatchInput, type OpponentLineupEntry, type Person, type SeasonSettings } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
@@ -197,7 +197,7 @@ function FormationTab({ match, players, canEdit, teamId, seasonId, onUpdated }: 
   const staffShown = [...META_FIELDS, ...STAFF_FIELDS]
     .map((f) => ({ label: f.label as TKey, value: (match as any)[f.key] as string | null }))
     .filter((x) => x.value);
-  const isEmpty = match.lineup.length === 0 && staffShown.length === 0;
+  const isEmpty = match.lineup.length === 0 && staffShown.length === 0 && match.absences.length === 0;
 
   return (
     <div>
@@ -242,6 +242,22 @@ function FormationTab({ match, players, canEdit, teamId, seasonId, onUpdated }: 
                     <span className="lineup-name ellipsis">{lineName(l)}</span>
                     {l.captain && <span className="pill pill-c">{t('captainShort')}</span>}
                     {l.viceCaptain && <span className="pill pill-v">{t('viceCaptainShort')}</span>}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {match.absences.length > 0 && (
+            <>
+              <h3 className="settings-heading">{t('absent')}</h3>
+              <div className="detail-list">
+                {match.absences.map((a) => (
+                  <div className="detail-row" key={a.id}>
+                    <div className="detail-main">
+                      <div className="detail-label">{personName(a.player, t('unknown'))}</div>
+                      <div className="detail-value">{t(ABSENCE_REASON_LABEL[a.reason])}</div>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -190,6 +190,18 @@ const dict = {
     onlyOneCaptain: 'Può esserci un solo capitano',
     onlyOneVice: 'Può esserci un solo vice capitano',
 
+    // match absences
+    absent: 'Assenti',
+    absenceReason: 'Motivo assenza',
+    absNotPlayed: 'Non disputata',
+    absNotEligible: 'Non convocabile',
+    absNotCalled: 'Non convocato dall’allenatore',
+    absInjured: 'Infortunato',
+    absCalledThenAbsent: 'Convocato ma poi assente',
+    absDisciplinary: 'Punizione',
+    absCalledUpOlder: 'Convocati con i ragazzi di un anno più grandi',
+    absIll: 'Ammalato',
+
     // match staff (distinta)
     staffResponsibles: 'Staff / Responsabili',
     mCoach: 'Allenatore',
@@ -527,6 +539,18 @@ const dict = {
     selectStarters: 'Select the starters (max 11) and the bench',
     onlyOneCaptain: 'Only one captain allowed',
     onlyOneVice: 'Only one vice-captain allowed',
+
+    // match absences
+    absent: 'Absent',
+    absenceReason: 'Absence reason',
+    absNotPlayed: 'Not played',
+    absNotEligible: 'Not eligible',
+    absNotCalled: 'Not called up',
+    absInjured: 'Injured',
+    absCalledThenAbsent: 'Called up but absent',
+    absDisciplinary: 'Disciplinary',
+    absCalledUpOlder: 'Called up with older squad',
+    absIll: 'Ill',
 
     // match staff (distinta)
     staffResponsibles: 'Staff / Officials',
