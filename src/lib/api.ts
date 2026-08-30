@@ -348,6 +348,13 @@ export interface ParsedOpponent {
   warnings: string[];
 }
 
+// Result of importing opponent venues from a campi (venues) PDF page.
+export interface CampiImportResult {
+  filled: { name: string; society: string }[];
+  unmatched: string[];
+  rowsOnPage: number;
+}
+
 // One opponent line-up row as sent to the server when saving.
 export interface OpponentLineupInput {
   order?: number | null;
@@ -544,6 +551,16 @@ export const api = {
     request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/opponent-lineup`, {
       method: 'PUT', body: body({ lineup }),
     }),
+  // Fill opponent venues from a league "campi" PDF: one page (your girone) fills
+  // every opponent matched by name.
+  importCampi: (teamId: string, seasonId: string, file: File, page: number) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request<CampiImportResult>(
+      `/teams/${teamId}/seasons/${seasonId}/opponents/import-campi?page=${page}`,
+      { method: 'POST', body: form },
+    );
+  },
 
   // Player statistics (per season)
   playerStats: (teamId: string, seasonId: string, playerId: string) =>
