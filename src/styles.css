@@ -451,6 +451,20 @@ button { font-family: inherit; }
   background: rgba(34, 197, 94, 0.14); border: 1px solid rgba(34, 197, 94, 0.28); color: var(--accent);
 }
 
+/* ── Opponents (avversari) ───────────────────────────────────────────────── */
+.subcard {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 0.6rem 0.7rem;
+}
+.link-row {
+  display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  background: none; border: none; padding: 0; cursor: pointer; color: inherit; font: inherit;
+}
+.linklike {
+  background: none; border: none; padding: 0; cursor: pointer;
+  color: var(--accent); font: inherit; text-decoration: underline;
+}
+
 /* ── Formation editor rows ───────────────────────────────────────────────── */
 .lineup-edit-row {
   display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;

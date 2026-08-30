@@ -160,8 +160,23 @@ export interface Match extends MatchStaff {
   opponentComment: string; // note about the opposing team
   events: MatchEvent[];
   lineup: LineupEntry[];
+  opponentLineup: OpponentLineupEntry[];
   createdAt: string;
   updatedAt: string;
+}
+
+// One opposing player's row in a match line-up (free text — the opponent is not a
+// registered team). Typically extracted from an uploaded distinta.
+export interface OpponentLineupEntry {
+  id: string;
+  order: number | null;
+  shirtNumber: number | null;
+  name: string;
+  birthDate: string | null;
+  matricola: string | null;
+  captain: boolean;
+  viceCaptain: boolean;
+  starter: boolean;
 }
 
 // Payload for creating/updating a match's core fields (incl. per-match duration).
@@ -279,6 +294,70 @@ export interface ParsedDistinta {
   staff: Omit<MatchStaff, 'distintaNumber' | 'competition'>;
   unmatchedCount: number;
   warnings: string[];
+}
+
+// ── Opponents (per-season) ──────────────────────────────────────────────────────
+// A per-season venue record for an opposing team (where/when they play).
+export interface OpponentVenue {
+  id: string;
+  name: string;
+  fieldName: string | null;
+  address: string | null;
+  matchDay: number | null; // JS getDay: 0 = Sunday … 6 = Saturday
+  matchTime: string | null; // "HH:MM"
+}
+
+export interface OpponentVenueInput {
+  name: string;
+  fieldName?: string | null;
+  address?: string | null;
+  matchDay?: number | null;
+  matchTime?: string | null;
+}
+
+// One of the opponent's matches against us, with their line-up for it.
+export interface OpponentMatch {
+  id: string;
+  date: string;
+  matchType: string;
+  isHome: boolean;
+  opponentLineup: OpponentLineupEntry[];
+}
+
+// The Avversari page groups the season's matches by opposing-team name.
+export interface OpponentGroup {
+  name: string;
+  venue: OpponentVenue | null;
+  matches: OpponentMatch[];
+}
+
+// A parsed opponent distinta (image OCR or PDF) — rows for review, not persisted.
+export interface ParsedOpponentPlayer {
+  order: number | null;
+  shirtNumber: number | null;
+  name: string;
+  birthDate: string | null;
+  matricola: string | null;
+  captain: boolean;
+  viceCaptain: boolean;
+  starter: boolean;
+}
+
+export interface ParsedOpponent {
+  players: ParsedOpponentPlayer[];
+  warnings: string[];
+}
+
+// One opponent line-up row as sent to the server when saving.
+export interface OpponentLineupInput {
+  order?: number | null;
+  shirtNumber?: number | null;
+  name: string;
+  birthDate?: string | null;
+  matricola?: string | null;
+  captain: boolean;
+  viceCaptain: boolean;
+  starter: boolean;
 }
 
 // Payloads for creating an event (discriminated by `type`).
@@ -446,6 +525,25 @@ export const api = {
       { method: 'POST', body: form },
     );
   },
+
+  // Opponents (per team+season): venue records + per-match opponent line-ups.
+  opponents: (teamId: string, seasonId: string) =>
+    request<OpponentGroup[]>(`/teams/${teamId}/seasons/${seasonId}/opponents`),
+  saveOpponentVenue: (teamId: string, seasonId: string, data: OpponentVenueInput) =>
+    request<OpponentVenue>(`/teams/${teamId}/seasons/${seasonId}/opponents`, { method: 'PUT', body: body(data) }),
+  // Upload an opponent distinta (image → OCR, or PDF); returns parsed rows for review.
+  parseOpponentDistinta: (teamId: string, seasonId: string, matchId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request<ParsedOpponent>(
+      `/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/opponent-lineup/parse`,
+      { method: 'POST', body: form },
+    );
+  },
+  saveOpponentLineup: (teamId: string, seasonId: string, matchId: string, lineup: OpponentLineupInput[]) =>
+    request<Match>(`/teams/${teamId}/seasons/${seasonId}/matches/${matchId}/opponent-lineup`, {
+      method: 'PUT', body: body({ lineup }),
+    }),
 
   // Player statistics (per season)
   playerStats: (teamId: string, seasonId: string, playerId: string) =>
