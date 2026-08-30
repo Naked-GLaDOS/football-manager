@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, matchTitle, resolveMatchDuration, type Match, type MatchInput, type Person, type SeasonSettings } from '../lib/api';
+import { api, matchTitle, resolveMatchDuration, type Match, type MatchInput, type OpponentLineupEntry, type Person, type SeasonSettings } from '../lib/api';
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import type { TKey } from '../lib/i18n';
@@ -7,10 +7,11 @@ import MatchEventsPanel, { personName } from '../components/MatchEventsPanel';
 import FormationEditor, {
   initFromMatch, initFromDistinta, META_FIELDS, STAFF_FIELDS, type EditorInit,
 } from '../components/FormationEditor';
+import OpponentLineupEditor, { type OppRowInit } from '../components/OpponentLineupEditor';
 import { MatchForm } from './Matches';
 import { IconBack, IconEdit, IconCheck, IconUpload, IconList, IconShirt } from '../components/Icons';
 
-type Tab = 'formation' | 'events' | 'comment';
+type Tab = 'formation' | 'opponent' | 'events' | 'comment';
 
 export default function MatchPage({ matchId }: { matchId: string }) {
   const s = useSession();
@@ -100,12 +101,17 @@ export default function MatchPage({ matchId }: { matchId: string }) {
 
       <div className="segmented tabs" style={{ marginBottom: '1rem' }}>
         <button type="button" className={tab === 'formation' ? 'active' : ''} onClick={() => setTab('formation')}>{t('formation')}</button>
+        <button type="button" className={tab === 'opponent' ? 'active' : ''} onClick={() => setTab('opponent')}>{t('opponents')}</button>
         <button type="button" className={tab === 'events' ? 'active' : ''} onClick={() => setTab('events')}>{t('events')}</button>
         <button type="button" className={tab === 'comment' ? 'active' : ''} onClick={() => setTab('comment')}>{t('comment')}</button>
       </div>
 
       {tab === 'formation' && (
         <FormationTab match={match} players={players} canEdit={editable}
+          teamId={teamId!} seasonId={seasonId!} onUpdated={onUpdated} />
+      )}
+      {tab === 'opponent' && (
+        <OpponentTab match={match} canEdit={editable}
           teamId={teamId!} seasonId={seasonId!} onUpdated={onUpdated} />
       )}
       {tab === 'events' && (
@@ -255,6 +261,106 @@ function FormationTab({ match, players, canEdit, teamId, seasonId, onUpdated }: 
                   </div>
                 ))}
               </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Opponent tab: the opposing team's line-up + distinta (photo/PDF) upload ──────
+function OpponentTab({ match, canEdit, teamId, seasonId, onUpdated }: {
+  match: Match; canEdit: boolean; teamId: string; seasonId: string; onUpdated: (m: Match) => void;
+}) {
+  const { t } = useSession();
+  const [mode, setMode] = useState<Mode>('view');
+  const [init, setInit] = useState<OppRowInit[] | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Both a saved OpponentLineupEntry and a ParsedOpponentPlayer are assignable to
+  // this — we only keep the editable fields (id/order are dropped).
+  const toInit = (rows: OppRowInit[]): OppRowInit[] =>
+    rows.map((r) => ({
+      shirtNumber: r.shirtNumber, name: r.name, birthDate: r.birthDate, matricola: r.matricola,
+      starter: r.starter, captain: r.captain, viceCaptain: r.viceCaptain,
+    }));
+
+  const startManual = () => { setInit(toInit(match.opponentLineup)); setWarnings([]); setError(''); setMode('edit'); };
+
+  const onFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true); setError('');
+    try {
+      const parsed = await api.parseOpponentDistinta(teamId, seasonId, match.id, file);
+      setInit(toInit(parsed.players));
+      setWarnings(parsed.warnings);
+      setMode('edit');
+    } catch (err: any) {
+      setError(err.message || 'Error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (mode === 'edit' && init) {
+    return (
+      <OpponentLineupEditor teamId={teamId} seasonId={seasonId} matchId={match.id}
+        init={init} warnings={warnings}
+        onDone={(m) => { onUpdated(m); setMode('view'); }}
+        onCancel={() => setMode('view')} />
+    );
+  }
+
+  const byShirt = (a: OpponentLineupEntry, b: OpponentLineupEntry) => {
+    if (a.shirtNumber !== b.shirtNumber) {
+      if (a.shirtNumber == null) return 1;
+      if (b.shirtNumber == null) return -1;
+      return a.shirtNumber - b.shirtNumber;
+    }
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  };
+  const starters = match.opponentLineup.filter((l) => l.starter).sort(byShirt);
+  const bench = match.opponentLineup.filter((l) => !l.starter).sort(byShirt);
+
+  const card = (l: OpponentLineupEntry, isBench = false) => (
+    <div key={l.id} className={`lineup-card${isBench ? ' bench' : ''}`}>
+      <span className="shirt-badge"><IconShirt size={13} /> {l.shirtNumber ?? '–'}</span>
+      <span className="lineup-name ellipsis">{l.name}</span>
+      {l.captain && <span className="pill pill-c" title={t('captain')}>{t('captainShort')}</span>}
+      {l.viceCaptain && <span className="pill pill-v" title={t('viceCaptain')}>{t('viceCaptainShort')}</span>}
+    </div>
+  );
+
+  return (
+    <div>
+      {canEdit && (
+        <div className="head-actions" style={{ marginBottom: '1rem' }}>
+          <button className="btn btn-ghost btn-sm" onClick={startManual}>
+            <IconList /> {t('setOpponentManually')}
+          </button>
+          <label className="btn btn-ghost btn-sm" style={{ cursor: 'pointer' }}>
+            <IconUpload /> {uploading ? t('parsing') : t('uploadOpponentDistinta')}
+            <input type="file" accept="image/*,application/pdf,.pdf" style={{ display: 'none' }}
+              disabled={uploading} onChange={(e) => onFile(e.target.files?.[0])} />
+          </label>
+        </div>
+      )}
+      {error && <p className="error" style={{ marginBottom: '0.8rem' }}>{error}</p>}
+      {canEdit && <p className="muted" style={{ fontSize: '0.78rem', margin: '0 0 1rem' }}>{t('opponentDistintaHint')}</p>}
+
+      {match.opponentLineup.length === 0 ? (
+        <p className="empty">{t('noOpponentLineup')}</p>
+      ) : (
+        <>
+          {starters.length > 0 && <h3 className="settings-heading">{t('starters')}</h3>}
+          <div className="lineup-grid">{starters.map((l) => card(l))}</div>
+          {bench.length > 0 && (
+            <>
+              <h3 className="settings-heading">{t('bench')}</h3>
+              <div className="lineup-grid">{bench.map((l) => card(l, true))}</div>
             </>
           )}
         </>

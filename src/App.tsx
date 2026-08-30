@@ -8,6 +8,7 @@ import Layout, { type View } from './components/Layout';
 import Roster from './pages/Roster';
 import Genitori from './pages/Genitori';
 import Matches from './pages/Matches';
+import Avversari from './pages/Avversari';
 import Trainings from './pages/Trainings';
 import Impostazioni from './pages/Impostazioni';
 import Cms from './pages/Cms';
@@ -57,6 +58,7 @@ function Shell() {
             {view === 'staff' && <Roster kind="staff" />}
             {view === 'genitori' && <Genitori />}
             {view === 'matches' && <Matches />}
+            {view === 'avversari' && <Avversari />}
             {view === 'trainings' && <Trainings />}
             {view === 'settings' && <Impostazioni />}
             {view === 'cms' && <Cms />}

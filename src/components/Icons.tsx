@@ -56,6 +56,9 @@ export const IconTrainings = ({ size = 22 }: P) => (
 export const IconMatches = ({ size = 22 }: P) => (
   <svg {...base(size)}><circle cx="12" cy="12" r="9" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M12 8l3.2 2.3-1.2 3.7h-4L8.8 10.3 12 8z" /></svg>
 );
+export const IconOpponents = ({ size = 22 }: P) => (
+  <svg {...base(size)}><path d="M12 3l7 2.4v5.1c0 4.4-3 7.7-7 8.9-4-1.2-7-4.5-7-8.9V5.4L12 3z" /><path d="M9.5 10.5 12 9l2.5 1.5-1 2.8h-3l-1-2.8z" /></svg>
+);
 export const IconTrash = ({ size = 16 }: P) => (
   <svg {...base(size)}><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M10 11v6M14 11v6" /></svg>
 );

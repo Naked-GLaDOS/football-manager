@@ -217,6 +217,26 @@ const dict = {
     distintaWarnings: 'Avvisi',
     playersImported: 'giocatori riconosciuti',
 
+    // opponents (avversari)
+    opponents: 'Avversari',
+    opponentVenue: 'Campo e orari',
+    opponentField: 'Campo',
+    opponentAddress: 'Indirizzo',
+    opponentDay: 'Giorno',
+    opponentTime: 'Orario',
+    noDaySet: 'Nessuno',
+    noOpponents: 'Nessun avversario. Crea una partita per iniziare.',
+    opponentPlayers: 'Giocatori avversari',
+    noOpponentLineup: 'Distinta non caricata',
+    openMatch: 'Apri partita',
+    opponentDistinta: 'Distinta avversario',
+    uploadOpponentDistinta: 'Carica distinta (foto o PDF)',
+    opponentDistintaHint: 'Carica una foto o un PDF della distinta avversaria per compilarne la formazione. La lettura da foto è approssimativa: controlla numeri e nomi prima di salvare.',
+    setOpponentManually: 'Inserisci manualmente',
+    addOpponentPlayer: 'Aggiungi giocatore',
+    saveOpponentLineup: 'Salva distinta avversario',
+    opponentName: 'Nome',
+
     // bulk copy / export
     copyData: 'Copia dati',
     exportPdf: 'Esporta PDF',
@@ -528,6 +548,26 @@ const dict = {
     parsing: 'Parsing…',
     distintaWarnings: 'Warnings',
     playersImported: 'players recognised',
+
+    // opponents (avversari)
+    opponents: 'Opponents',
+    opponentVenue: 'Venue & times',
+    opponentField: 'Field',
+    opponentAddress: 'Address',
+    opponentDay: 'Day',
+    opponentTime: 'Time',
+    noDaySet: 'None',
+    noOpponents: 'No opponents yet. Create a match to start.',
+    opponentPlayers: 'Opposing players',
+    noOpponentLineup: 'No match-sheet uploaded',
+    openMatch: 'Open match',
+    opponentDistinta: 'Opponent match-sheet',
+    uploadOpponentDistinta: 'Upload match-sheet (photo or PDF)',
+    opponentDistintaHint: 'Upload a photo or PDF of the opponent match-sheet to fill their line-up. Photo reading is approximate — check numbers and names before saving.',
+    setOpponentManually: 'Enter manually',
+    addOpponentPlayer: 'Add player',
+    saveOpponentLineup: 'Save opponent line-up',
+    opponentName: 'Name',
 
     // bulk copy / export
     copyData: 'Copy data',
