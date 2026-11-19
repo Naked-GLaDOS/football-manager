@@ -116,6 +116,14 @@ export interface MatchEvent {
   playerOut: EventPlayer | null;
   player: EventPlayer | null;
   card: CardColor | null;
+  // Goal attribution
+  isOwnGoal: boolean;
+  forOwnTeam: boolean;
+  opponentPlayerName: string | null;
+  // Opponent substitution
+  isOpponentSub: boolean;
+  opponentPlayerInName: string | null;
+  opponentPlayerOutName: string | null;
   createdAt: string;
 }
 
@@ -404,8 +412,9 @@ export interface OpponentLineupInput {
 // Payloads for creating an event (discriminated by `type`).
 export type NewMatchEvent =
   | { type: 'SUBSTITUTION'; period: number; minute: number; playerInId: string; playerOutId: string }
+  | { type: 'SUBSTITUTION'; isOpponentSub: true; period?: number | null; minute?: number | null; opponentPlayerInName?: string | null; opponentPlayerOutName?: string | null }
   | { type: 'CARD'; period: number | null; minute: number | null; playerId: string; card: CardColor }
-  | { type: 'GOAL'; period: number | null; minute: number | null; playerId: string };
+  | { type: 'GOAL'; period: number | null; minute: number | null; playerId?: string; isOwnGoal?: boolean; opponentPlayerName?: string | null };
 
 // ── Account / notifications ─────────────────────────────────────────────────
 export type Theme = 'dark' | 'light';

@@ -149,6 +149,24 @@ const dict = {
     addGoal: 'Aggiungi goal',
     subsLimitReached: 'Numero massimo di sostituzioni raggiunto',
 
+    // goal attribution
+    ownTeam: 'Nostra',
+    opponentTeam: 'Avversario',
+    ownGoal: 'Autogoal',
+    scorerName: 'Nome marcatore',
+    goalOpponentLabel: 'Goal avversario',
+    goalOwnGoalFor: 'Autogoal avversario',
+    // opponent substitutions
+    opponentSubstitution: 'Sostituzione avversaria',
+    opponentSubsUsed: 'Avversario',
+    addOpponentSub: 'Aggiungi sostituzione avversaria',
+    opponentPlayerIn: 'Entra (facoltativo)',
+    opponentPlayerOut: 'Esce (facoltativo)',
+    // score / result
+    resultWin: 'Vittoria',
+    resultLoss: 'Sconfitta',
+    resultDraw: 'Pareggio',
+
     // navigation / tabs
     back: 'Indietro',
     registry: 'Anagrafica',
@@ -498,6 +516,24 @@ const dict = {
     addCard: 'Add card',
     addGoal: 'Add goal',
     subsLimitReached: 'Maximum number of substitutions reached',
+
+    // goal attribution
+    ownTeam: 'Own team',
+    opponentTeam: 'Opponent',
+    ownGoal: 'Own goal',
+    scorerName: 'Scorer name',
+    goalOpponentLabel: 'Opponent goal',
+    goalOwnGoalFor: 'Opponent own goal',
+    // opponent substitutions
+    opponentSubstitution: 'Opponent substitution',
+    opponentSubsUsed: 'Opponent',
+    addOpponentSub: 'Add opponent substitution',
+    opponentPlayerIn: 'Player in (optional)',
+    opponentPlayerOut: 'Player out (optional)',
+    // score / result
+    resultWin: 'Win',
+    resultLoss: 'Defeat',
+    resultDraw: 'Draw',
 
     // navigation / tabs
     back: 'Back',

@@ -3,7 +3,7 @@ import { api, matchTitle, resolveMatchDuration, type Match, type MatchInput, typ
 import { useSession } from '../lib/session';
 import { useNav } from '../lib/nav';
 import { useBackDismiss } from '../lib/backnav';
-import { IconPlus, IconTrash, IconBall } from '../components/Icons';
+import { IconPlus, IconTrash } from '../components/Icons';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
 
@@ -93,8 +93,12 @@ export default function Matches() {
 
   const renderMatch = (m: Match) => {
     const d = new Date(m.date);
-    const goals = m.events.filter((e) => e.type === 'GOAL').length;
-    const needsData = !isNaN(d.getTime()) && d.getTime() < startOfTodayMs() && !matchHasData(m);
+    const isPast = !isNaN(d.getTime()) && d.getTime() < startOfTodayMs();
+    const needsData = isPast && !matchHasData(m);
+    const ownGoals = m.events.filter((e) => e.type === 'GOAL' && e.forOwnTeam).length;
+    const oppGoals = m.events.filter((e) => e.type === 'GOAL' && !e.forOwnTeam).length;
+    const hasGoalEvents = m.events.some((e) => e.type === 'GOAL');
+    const result = ownGoals > oppGoals ? 'win' : ownGoals < oppGoals ? 'loss' : 'draw';
     return (
       <div key={m.id} className="card interactive match-card" onClick={() => nav.open({ type: 'match', id: m.id })}>
         <div className="match-date">
@@ -106,7 +110,11 @@ export default function Matches() {
           <div className="match-meta">
             <span className="tag tag-static">{m.matchType}</span>
             <span className="tag tag-static">{t(m.isHome ? 'home' : 'away')}</span>
-            {goals > 0 && <span className="row-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}><IconBall /> {goals}</span>}
+            {hasGoalEvents && (
+              <span className={`score-pill score-pill-${result}`}>
+                {ownGoals}–{oppGoals}
+              </span>
+            )}
             {needsData && <span className="tag tag-warning">{t('missingData')}</span>}
           </div>
         </div>
